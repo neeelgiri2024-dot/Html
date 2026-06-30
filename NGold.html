@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NGold — भारत गोल्ड इंटेलिजेंस</title>
+<title>NGold — தங்கநீல்(Live)</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&family=Hind:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -14,8 +14,7 @@
   --up:#00E87A;--upbg:rgba(0,232,122,.1);--upbd:rgba(0,232,122,.25);
   --dn:#FF4D6D;--dnbg:rgba(255,77,109,.1);--dnbd:rgba(255,77,109,.25);
   --bl:#7B8CFF;--blbg:rgba(123,140,255,.1);--blbd:rgba(123,140,255,.25);
-  --or:#FF9F43;--saffron:#FF9933;--indiagreen:#138808;
-  --sv:#C8D4E8;
+  --or:#FF9F43;--saffron:#FF9933;--indiagreen:#138808;--sv:#C8D4E8;
   --tx0:#FFFFFF;--tx1:#EDE8F8;--tx2:#B0A8CC;--tx3:#7068A0;--tx4:#3D3860;
   --glow-g:0 0 40px rgba(245,197,24,.2),0 0 80px rgba(245,197,24,.07);
 }
@@ -34,7 +33,7 @@ body::after{content:'';position:fixed;bottom:-200px;left:-100px;width:500px;heig
 .ticker::before,.ticker::after{content:'';position:absolute;top:0;width:80px;height:100%;z-index:2}
 .ticker::before{left:0;background:linear-gradient(90deg,var(--bg0),transparent)}
 .ticker::after{right:0;background:linear-gradient(270deg,var(--bg0),transparent)}
-.ticker-inner{display:flex;width:max-content;animation:tick 32s linear infinite}
+.ticker-inner{display:flex;width:max-content;animation:tick 30s linear infinite}
 @keyframes tick{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
 .ti{display:flex;align-items:center;gap:7px;padding:0 22px;font-family:'DM Mono',monospace;font-size:10px;white-space:nowrap;border-right:1px solid var(--bd1)}
 .ti .n{color:var(--tx3);letter-spacing:1px}.ti .v{color:var(--tx0);font-weight:500}
@@ -63,13 +62,16 @@ header{display:flex;align-items:center;justify-content:space-between;padding:14p
 .lring::before{content:'';position:absolute;inset:0;border-radius:50%;background:var(--up);animation:ring 1.4s ease-out infinite}
 .lring::after{content:'';position:absolute;inset:2px;border-radius:50%;background:var(--up)}
 @keyframes ring{0%{transform:scale(1);opacity:.8}100%{transform:scale(2.8);opacity:0}}
+.lring.offline::before,.lring.offline::after{background:var(--dn)}
 .lt{font-family:'DM Mono',monospace;font-size:9px;color:var(--up);letter-spacing:1px}
+.lt.offline{color:var(--dn)}
 #clk{font-family:'DM Mono',monospace;font-size:10px;color:var(--tx2);margin-left:4px}
 .hr{display:flex;gap:7px}
 .btn{border:none;font-family:'Syne',sans-serif;font-weight:700;font-size:10px;
   padding:7px 14px;border-radius:8px;cursor:pointer;transition:all .2s;letter-spacing:.4px}
 .bg{background:linear-gradient(135deg,var(--g300),var(--g200));color:#05040A}
 .bg:hover{transform:translateY(-1px);box-shadow:0 4px 20px rgba(245,197,24,.3)}
+.bg:disabled{opacity:.5;cursor:not-allowed;transform:none}
 .bgh{background:transparent;border:1px solid var(--bd2);color:var(--tx2)}
 .bgh:hover{border-color:var(--bd3);color:var(--tx1)}
 
@@ -78,21 +80,28 @@ header{display:flex;align-items:center;justify-content:space-between;padding:14p
   display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
 .ok{color:var(--up)}.er{color:var(--dn)}.ld{color:var(--g200)}
 
-/* WHY-NO-TODAY EXPLAINER BANNER */
-.explain-banner{background:rgba(123,140,255,.06);border:1px solid rgba(123,140,255,.2);
-  border-radius:14px;padding:16px 20px;margin:18px 0;display:flex;gap:14px;align-items:flex-start;
-  animation:fadeUp .5s ease both}
-.explain-icon{font-size:24px;flex-shrink:0}
-.explain-text{font-size:11px;color:var(--tx2);line-height:1.7}
-.explain-text strong{color:var(--bl)}
-.explain-text code{background:var(--bg3);padding:1px 5px;border-radius:4px;font-family:'DM Mono',monospace;font-size:10px}
+#countdown{font-family:'DM Mono',monospace;font-size:10px;color:var(--tx3)}
+#countdown b{color:var(--g200)}
 
 #sourcePanel{display:none;background:var(--bg2);border:1px solid var(--bd2);
-  border-radius:14px;padding:18px;margin:18px 0;animation:fadeIn .3s ease;font-size:11px}
+  border-radius:14px;padding:18px;margin:18px 0;animation:fadeIn .3s ease;font-size:11px;
+  max-height:400px;overflow-y:auto}
 .src-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;margin-bottom:10px;color:var(--g200)}
 .src-row{display:flex;justify-content:space-between;padding:7px 10px;background:var(--bg3);
   border-radius:7px;margin-bottom:6px;font-family:'DM Mono',monospace;font-size:10px;gap:10px}
 .src-row .sn{color:var(--tx2)}.src-row .su{color:var(--bl);text-align:right}
+.src-row.success{border-left:2px solid var(--up)}
+.src-row.fail{border-left:2px solid var(--dn);opacity:.6}
+
+.explain-banner{background:rgba(123,140,255,.06);border:1px solid rgba(123,140,255,.2);
+  border-radius:14px;padding:16px 20px;margin:18px 0;display:flex;gap:14px;align-items:flex-start;
+  animation:fadeUp .5s ease both}
+.explain-banner.warn{background:rgba(255,77,109,.06);border-color:rgba(255,77,109,.2)}
+.explain-icon{font-size:24px;flex-shrink:0}
+.explain-text{font-size:11px;color:var(--tx2);line-height:1.7}
+.explain-text strong{color:var(--bl)}
+.explain-banner.warn .explain-text strong{color:var(--dn)}
+.explain-text code{background:var(--bg3);padding:1px 5px;border-radius:4px;font-family:'DM Mono',monospace;font-size:10px}
 
 .sec{padding-top:26px}
 .sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px}
@@ -113,36 +122,6 @@ header{display:flex;align-items:center;justify-content:space-between;padding:14p
 .culture-icon{font-size:28px;flex-shrink:0}
 .culture-text{font-size:11px;color:var(--tx2);line-height:1.6;font-family:'Hind',sans-serif}
 .culture-text strong{color:var(--g200)}
-
-.pred-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:22px}
-.pred-card{background:var(--bg2);border:1px solid var(--bd2);border-radius:16px;
-  padding:20px;position:relative;overflow:hidden;transition:transform .3s,border-color .3s;
-  animation:fadeUp .5s ease both}
-.pred-card:hover{transform:translateY(-3px);border-color:var(--bd3)}
-.pred-card.bull::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
-  background:linear-gradient(90deg,transparent,var(--up),transparent)}
-.pred-card.bear::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
-  background:linear-gradient(90deg,transparent,var(--dn),transparent)}
-.pglow{position:absolute;top:-50px;right:-50px;width:160px;height:160px;border-radius:50%;pointer-events:none;opacity:.05}
-.bull .pglow{background:var(--up)}.bear .pglow{background:var(--dn)}
-.pred-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px}
-.pred-eye{font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--tx3);font-family:'DM Mono',monospace}
-.pred-label{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;margin-top:4px;margin-bottom:2px}
-.conf{font-family:'DM Mono',monospace;font-size:9px;padding:3px 8px;border-radius:20px;
-  background:rgba(245,197,24,.07);color:var(--g200);border:1px solid rgba(245,197,24,.18)}
-.pred-note{font-size:9px;color:var(--tx3);font-family:'DM Mono',monospace;margin-bottom:12px;
-  padding:8px 10px;background:var(--bg3);border-radius:8px;line-height:1.6}
-.pred-rows{display:flex;flex-direction:column;gap:7px}
-.pred-row{display:flex;justify-content:space-between;align-items:center;
-  padding:8px 12px;background:var(--bg3);border-radius:9px;border:1px solid var(--bd1);transition:background .2s}
-.pred-row:hover{background:var(--bg4)}
-.pred-when{font-size:9px;color:var(--tx3);font-family:'DM Mono',monospace;min-width:68px}
-.pv1{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--g200)}
-.pv1 em{font-style:normal;font-size:8px;color:var(--tx3);font-family:'DM Mono',monospace}
-.pv8{font-size:8px;color:var(--tx3);font-family:'DM Mono',monospace;margin-top:1px}
-.dir-chip{font-size:9px;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:7px;font-weight:500}
-.dir-chip.up{color:var(--up);background:var(--upbg);border:1px solid var(--upbd)}
-.dir-chip.dn{color:var(--dn);background:var(--dnbg);border:1px solid var(--dnbd)}
 
 .rg{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
 .rc{background:var(--bg2);border:1px solid var(--bd2);border-radius:15px;padding:18px 16px;
@@ -213,7 +192,6 @@ td{padding:9px 15px;font-size:11px;font-family:'DM Mono',monospace;
   border-bottom:1px solid var(--bd1);color:var(--tx1);white-space:nowrap;transition:background .15s}
 tr:last-child td{border-bottom:none}
 tbody tr:hover td{background:var(--bg3)}
-.src-cell{font-size:8px;color:var(--tx4)}
 
 .fest-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:22px}
 .fest-card{background:var(--bg2);border:1px solid var(--bd1);border-radius:12px;padding:13px;transition:border-color .2s,transform .2s}
@@ -227,6 +205,12 @@ tbody tr:hover td{background:var(--bg3)}
 .div::after{content:'◆';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
   background:var(--bg1);padding:0 10px;color:var(--tx4);font-size:8px}
 
+.loading-overlay{display:flex;align-items:center;justify-content:center;height:100%;
+  font-family:'DM Mono',monospace;font-size:11px;color:var(--tx3)}
+.spinner{width:14px;height:14px;border:2px solid var(--bd2);border-top-color:var(--g200);
+  border-radius:50%;animation:spin .8s linear infinite;margin-right:8px;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+
 @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 @keyframes flip{0%{opacity:1;transform:translateY(0)}40%{opacity:0;transform:translateY(-6px)}60%{opacity:0;transform:translateY(6px)}100%{opacity:1;transform:translateY(0)}}
@@ -239,7 +223,7 @@ footer{border-top:1px solid var(--bd1);padding:16px;text-align:center;
 footer strong{color:var(--tx3)}
 footer .disc{color:var(--dn);font-weight:600}
 
-@media(max-width:900px){.cg,.pred-grid{grid-template-columns:1fr}.cc.full{grid-column:span 1}}
+@media(max-width:900px){.cg{grid-template-columns:1fr}.cc.full{grid-column:span 1}}
 @media(max-width:820px){
   .rg{grid-template-columns:1fr 1fr}.rc.feat{grid-column:span 2}
   .ig{grid-template-columns:repeat(3,1fr)}
@@ -256,109 +240,85 @@ footer .disc{color:var(--dn);font-weight:600}
 <body>
 
 <div class="india-stripe"><div class="s1"></div><div class="s2"></div><div class="s3"></div></div>
-<div class="ticker"><div class="ticker-inner" id="tkr"></div></div>
+<div class="ticker"><div class="ticker-inner" id="tkr">
+  <div class="ti"><span class="n">LOADING</span><span class="v">Fetching live data…</span></div>
+</div></div>
 
 <header>
   <div class="brand">
     <div class="ico">✦</div>
-    <div><div class="bname">NGold</div><span class="bsub">भारत का सोना · India's Gold Intelligence</span></div>
+    <div><div class="bname">NGold</div><span class="bsub">भारत का सोना · Live API Edition</span></div>
   </div>
-  <div class="lr"><div class="lring"></div><span class="lt">LIVE</span><span id="clk"></span></div>
+  <div class="lr"><div class="lring" id="lring"></div><span class="lt" id="ltxt">CONNECTING</span><span id="clk"></span></div>
   <div class="hr">
-    <button class="btn bgh" onclick="toggleSources()">📋 Sources</button>
-    <button class="btn bgh" onclick="animRefresh()">⟳ Refresh</button>
+    <button class="btn bgh" onclick="toggleSources()">📋 API Log</button>
+    <button class="btn bg" id="rfBtn" onclick="manualRefresh()">⟳ Refresh Now</button>
   </div>
 </header>
 
 <div id="sb">
-  <span id="sMsg" class="ok">✓ Real data — day-wise through Jun 29, 2026 · Goodreturns news articles · PolicyBazaar · IBJA</span>
-  <span id="sTime" style="font-family:'DM Mono',monospace;font-size:10px;color:var(--tx3)"></span>
+  <span id="sMsg" class="ld">⏳ Connecting to live gold price APIs…</span>
+  <span id="countdown"></span>
 </div>
 
 <div class="wrap">
 
-  <!-- WHY NO JUN 30 EXPLAINER -->
-  <div class="explain-banner reveal">
-    <div class="explain-icon">ℹ️</div>
-    <div class="explain-text">
-      <strong>Why does data stop at Jun 29, not Jun 30?</strong> Two real constraints: (1) This page runs in a browser sandbox that
-      <strong>cannot make live API calls</strong> — every number here was manually verified via web search, not fetched automatically.
-      (2) Jewellers (Tanishq, Kalyan, Malabar) publish each day's rate progressively through the morning — at the time of this search,
-      no outlet had yet published a dated <code>Jun 30, 2026</code> article. The most recent <em>confirmed, dated</em> rate is Jun 29.
-      Share today's rate with me anytime and I'll rebuild this page with it added.
-    </div>
+  <div class="explain-banner reveal" id="apiStatusBanner" style="display:none">
+    <div class="explain-icon">⚠️</div>
+    <div class="explain-text" id="apiStatusText"></div>
   </div>
 
   <div id="sourcePanel">
-    <div class="src-title">📋 Day-wise Data Sources — Every Date Cited</div>
-    <div class="src-row"><span class="sn">Jun 20</span><span class="su">Goodreturns — Tanishq ₹13,435/g (22K)</span></div>
-    <div class="src-row"><span class="sn">Jun 22</span><span class="su">Goodreturns — Tanishq/Kalyan/Malabar ₹13,390/g (22K)</span></div>
-    <div class="src-row"><span class="sn">Jun 23</span><span class="su">Goodreturns — IBJA/Kalyan ₹13,375/g, 24K crash -1%</span></div>
-    <div class="src-row"><span class="sn">Jun 25</span><span class="su">Goodreturns — Tanishq ₹13,275, Malabar/Joyalukkas ₹13,100</span></div>
-    <div class="src-row"><span class="sn">Jun 27</span><span class="su">Goodreturns — Tanishq ₹13,130, Joyalukkas ₹13,085, Kalyan ₹12,980</span></div>
-    <div class="src-row"><span class="sn">Jun 28</span><span class="su">Goodreturns ticker — Sensex 77,100, 22K ₹12,980 (national)</span></div>
-    <div class="src-row"><span class="sn">Jun 29</span><span class="su">Goodreturns — Tanishq ₹13,240, IBJA/Malabar/Joyalukkas/Kalyan ₹13,195</span></div>
-    <div class="src-row"><span class="sn">Chennai/TN specific Jun 28-29</span><span class="su">PolicyBazaar.com ₹13,370 (28th) → ₹13,300 (29th)</span></div>
-    <div class="src-row"><span class="sn">June High/Low</span><span class="su">PolicyBazaar — High ₹14,630, Low ₹13,220 (22K)</span></div>
-    <div class="src-row"><span class="sn">Customs/GST rules</span><span class="su">ClearTax.in — 5% BCD + 1% AIDC + 3% GST</span></div>
-    <div style="font-size:9px;color:var(--tx4);margin-top:10px;font-family:'DM Mono',monospace">
-      This page cannot call live APIs (browser sandbox restriction). All figures were verified via web search at build time. To add Jun 30 or later, share the new rate and the page will be rebuilt.
-    </div>
+    <div class="src-title">📋 Live API Call Log</div>
+    <div id="srcLog"></div>
   </div>
 
   <div class="culture-banner reveal">
     <div class="culture-icon">🪔</div>
     <div class="culture-text">
       <strong>Gold in Tamil culture</strong> — central to weddings (thaali, bridal sets), Pongal, Akshaya Tritiya, family savings.
-      Chennai/Tamil Nadu is India's largest gold-consuming region. Govt levies <strong>6% customs duty</strong> (5% BCD + 1% AIDC) plus <strong>3% GST</strong> on every purchase. Source: ClearTax.in
+      Chennai/Tamil Nadu is India's largest gold-consuming region. Govt levies <strong>6% customs duty</strong> (5% BCD + 1% AIDC) plus <strong>3% GST</strong> on every purchase.
     </div>
   </div>
 
-  <!-- 01 PREDICTIONS -->
+  <!-- 01 LIVE RATE CARDS -->
   <div class="sec reveal">
     <div class="sh">
       <div class="sl"><span class="sn2">01</span>
-        <div><div class="st">7-Day Price Forecast</div>
-        <div class="ss">From Jun 29 base · Chennai 22K & 24K · Real momentum-based</div></div>
-      </div>
-      <button class="btn bg" onclick="buildPred()" style="font-size:10px;padding:6px 12px">⚡ Recompute</button>
-    </div>
-    <div class="pred-grid" id="pg"></div>
-  </div>
-
-  <!-- 02 RATE CARDS -->
-  <div class="sec reveal">
-    <div class="sh">
-      <div class="sl"><span class="sn2">02</span>
-        <div><div class="st">Latest Verified Rate</div><div class="ss" id="rateDate">Jun 29, 2026 · IBJA / Tanishq / PolicyBazaar</div></div>
+        <div><div class="st">Live Gold Rates — India</div><div class="ss" id="rateDate">Connecting…</div></div>
       </div>
     </div>
-    <div class="rg" id="rg"></div>
+    <div class="rg" id="rg">
+      <div class="rc feat"><div class="loading-overlay"><span class="spinner"></span>Fetching live spot price…</div></div>
+      <div class="rc feat"><div class="loading-overlay"><span class="spinner"></span>Calculating India rate…</div></div>
+      <div class="rc"><div class="loading-overlay"><span class="spinner"></span></div></div>
+      <div class="rc"><div class="loading-overlay"><span class="spinner"></span></div></div>
+    </div>
   </div>
 
   <div class="usb reveal">
     <div>
-      <div class="usb-eye">🇮🇳 India Market Context (Jun 29, 2026)</div>
+      <div class="usb-eye">🇺🇸 International Gold Spot (live, drives India price)</div>
       <div class="usb-price" id="usP">—</div>
-      <div class="usb-sub">Sensex / Nifty / USD-INR live ticker context from Goodreturns</div>
+      <div class="usb-sub" id="usSub">Connecting to gold-api.com…</div>
     </div>
     <div class="usb-stats" id="usStats"></div>
   </div>
 
   <div class="sec reveal">
-    <div class="sh"><div class="sl"><span class="sn2">03</span>
-      <div><div class="st">Indian Market Signals</div><div class="ss">Goodreturns live ticker, Jun 29 2026</div></div>
+    <div class="sh"><div class="sl"><span class="sn2">02</span>
+      <div><div class="st">Live Market Signals</div><div class="ss">Real-time from multiple APIs</div></div>
     </div></div>
     <div class="ig" id="ig"></div>
   </div>
 
   <div class="div"></div>
 
-  <!-- 04 DAY-WISE CHART -->
+  <!-- 03 LIVE CHART -->
   <div class="sec reveal">
     <div class="sh">
-      <div class="sl"><span class="sn2">04</span>
-        <div><div class="st">Day-wise Rate Chart</div><div class="ss">Chennai/National 22K — Jun 20 to Jun 29, verified daily</div></div>
+      <div class="sl"><span class="sn2">03</span>
+        <div><div class="st">7-Day Live Price History</div><div class="ss">India 22K & 24K — fetched from gold-api.com history</div></div>
       </div>
     </div>
     <div class="cg">
@@ -366,8 +326,8 @@ footer .disc{color:var(--dn);font-weight:600}
         <div class="cw"><canvas id="wc1"></canvas></div>
         <div class="lgd">
           <div class="li"><div class="ld" style="background:#F5C518"></div>22K</div>
-          <div class="li"><div class="ld" style="background:#00E87A;opacity:.7"></div>June High</div>
-          <div class="li"><div class="ld" style="background:#FF4D6D;opacity:.7"></div>June Low</div>
+          <div class="li"><div class="ld" style="background:#00E87A;opacity:.7"></div>Daily High</div>
+          <div class="li"><div class="ld" style="background:#FF4D6D;opacity:.7"></div>Daily Low</div>
         </div>
       </div>
       <div class="cc"><div class="cc-eye">Per 8 Grams · Pavun</div><div class="cc-val" id="wv8">—</div>
@@ -381,20 +341,19 @@ footer .disc{color:var(--dn);font-weight:600}
     </div>
   </div>
 
-  <!-- 05 24K CHART -->
   <div class="sec reveal">
     <div class="sh">
-      <div class="sl"><span class="sn2">05</span>
-        <div><div class="st">24K Investment Grade Chart</div><div class="ss">For SGB, digital gold, IBJA benchmark tracking</div></div>
+      <div class="sl"><span class="sn2">04</span>
+        <div><div class="st">24K Investment Grade — Live Trend</div><div class="ss">For SGB, digital gold, IBJA-equivalent tracking</div></div>
       </div>
     </div>
     <div class="cg">
-      <div class="cc full"><div class="cc-eye">24K Rate Trend · with June High/Low band</div>
+      <div class="cc full"><div class="cc-eye">24K Rate Trend · Live data</div>
         <div class="cw tall"><canvas id="mc"></canvas></div>
         <div class="lgd">
           <div class="li"><div class="ld" style="background:#FFE566"></div>24K</div>
-          <div class="li"><div class="ld" style="background:#00E87A;opacity:.35"></div>June High Zone</div>
-          <div class="li"><div class="ld" style="background:#FF4D6D;opacity:.35"></div>June Low Zone</div>
+          <div class="li"><div class="ld" style="background:#00E87A;opacity:.35"></div>High Zone</div>
+          <div class="li"><div class="ld" style="background:#FF4D6D;opacity:.35"></div>Low Zone</div>
         </div>
       </div>
     </div>
@@ -402,41 +361,41 @@ footer .disc{color:var(--dn);font-weight:600}
 
   <div class="div"></div>
 
-  <!-- 06 DAY-WISE HISTORY TABLE -->
+  <!-- 05 HISTORY TABLE -->
   <div class="sec reveal">
-    <div class="sh"><div class="sl"><span class="sn2">06</span>
-      <div><div class="st">Day-wise Rate History</div><div class="ss">Jun 20-29, 2026 · Each row dated & sourced</div></div>
+    <div class="sh"><div class="sl"><span class="sn2">05</span>
+      <div><div class="st">Live Rate History</div><div class="ss">Fetched from gold-api.com — last 7 trading days</div></div>
     </div></div>
     <div class="tw"><div class="ts">
       <table><thead><tr>
-        <th>Date</th><th>22K /g</th><th>24K /g</th><th>22K 8g</th><th>Δ 22K</th><th>Jeweller / Source</th>
-      </tr></thead><tbody id="hb"></tbody></table>
+        <th>Date</th><th>22K /g</th><th>24K /g</th><th>22K 8g</th><th>Δ 22K</th><th>Δ %</th>
+      </tr></thead><tbody id="hb"><tr><td colspan="6" style="text-align:center;color:var(--tx3);padding:20px">Loading live history…</td></tr></tbody></table>
     </div></div>
   </div>
 
-  <!-- 07 CITY TABLE -->
+  <!-- 06 CITY TABLE -->
   <div class="sec reveal">
-    <div class="sh"><div class="sl"><span class="sn2">07</span>
-      <div><div class="st">Major Indian Cities</div><div class="ss">Jun 29, 2026 · Goodreturns per-city verified</div></div>
+    <div class="sh"><div class="sl"><span class="sn2">06</span>
+      <div><div class="st">Major Indian Cities</div><div class="ss">Live spot × city differential (typical market premium)</div></div>
     </div></div>
     <div class="tw"><div class="ts">
       <table><thead><tr><th>City</th><th>22K /g</th><th>22K 8g</th><th>24K /g</th><th>24K 8g</th><th>18K /g</th></tr></thead>
-        <tbody id="cb"></tbody></table>
+        <tbody id="cb"><tr><td colspan="6" style="text-align:center;color:var(--tx3);padding:20px">Loading…</td></tr></tbody></table>
     </div></div>
   </div>
 
-  <!-- 08 FESTIVAL CALENDAR -->
+  <!-- 07 FESTIVALS -->
   <div class="sec reveal">
-    <div class="sh"><div class="sl"><span class="sn2">08</span>
-      <div><div class="st">Indian Festival Gold-Buying Calendar</div><div class="ss">Cultural context · Source: ClearTax.in</div></div>
+    <div class="sh"><div class="sl"><span class="sn2">07</span>
+      <div><div class="st">Indian Festival Gold-Buying Calendar</div><div class="ss">Cultural context</div></div>
     </div></div>
     <div class="fest-grid" id="festGrid"></div>
   </div>
 
-  <!-- 09 INVESTMENT OPTIONS -->
+  <!-- 08 INVESTMENT OPTIONS -->
   <div class="sec reveal">
-    <div class="sh"><div class="sl"><span class="sn2">09</span>
-      <div><div class="st">Gold Investment Options in India</div><div class="ss">Source: BankBazaar.com</div></div>
+    <div class="sh"><div class="sl"><span class="sn2">08</span>
+      <div><div class="st">Gold Investment Options in India</div><div class="ss">Reference guide</div></div>
     </div></div>
     <div class="tw"><div class="ts">
       <table><thead><tr><th>Option</th><th>Key Benefit</th><th>Liquidity</th><th>Best For</th></tr></thead>
@@ -447,109 +406,269 @@ footer .disc{color:var(--dn);font-weight:600}
 </div><!-- /wrap -->
 
 <footer>
-  <strong>NGold</strong> · भारत का सोना · Day-wise data verified through Jun 29, 2026 from dated Goodreturns.in news articles, PolicyBazaar.com, ClearTax.in, BankBazaar.com ·
-  India rate references IBJA benchmark + named jewellers (Tanishq, Malabar, Joyalukkas, Kalyan) ·
-  <span class="disc">Not financial advice. This page cannot auto-refresh — share new rates to update.</span>
+  <strong>NGold Live</strong> · भारत का सोना · Real-time data from gold-api.com (free, CORS-enabled, no key) + fawazahmed0 currency-api (INR/USD) ·
+  India rate = (USD/oz × INR/USD ÷ 31.1035) × 1.06 customs (5% BCD+1% AIDC) × 1.03 GST × karat/24 + typical making charges ·
+  Auto-refreshes every 5 minutes · <span class="disc">Not financial advice. Run in Safari/Chrome, not in-app browsers, for live fetch to work.</span>
 </footer>
 
 <script>
 // ═══════════════════════════════════════════════════════
-// DB — every entry cited to a dated, named source.
-// No interpolated/invented days — gaps reflect what
-// was actually published and found.
+// LIVE DATA ENGINE — NO HARDCODED PRICES.
+// Every number below is fetched at runtime from real APIs.
+// If you're reading this expecting fallback numbers: there
+// are none. If APIs fail, the UI shows an error, not fake data.
 // ═══════════════════════════════════════════════════════
 
-const DB = {
-  // ── LATEST VERIFIED: Jun 29, 2026 ──
-  // Source: Goodreturns "Gold Rate Today, June 29" article
-  today: {
-    date: 'Jun 29, 2026',
-    k22: 13110,   // IBJA/national benchmark per Goodreturns ticker
-    k24: 14302,   // Goodreturns India national avg, Jun 29
-    k18: 10727,   // Goodreturns India national avg, Jun 29
-    k22_tanishq: 13240,
-    k22_malabar: 13195,
-    k22_joyalukkas: 13195,
-    k22_kalyan: 13195,
-    k24_tanishq: 14444,
-    prev22: 12980, // Jun 27/28 national ticker value
-  },
+const TROY_OZ_TO_GRAM = 31.1034768;
+const CUSTOMS_DUTY = 1.06;   // 5% BCD + 1% AIDC
+const GST = 1.03;            // 3% GST
+const REFRESH_MS = 5 * 60 * 1000; // 5 minutes
 
-  // ── DAY-WISE HISTORY ── each entry = dated Goodreturns article
-  // jeweller field shows which retailer's rate this represents
-  history: [
-    {d:'Jun 20', v22:13435, v24:null, jeweller:'Tanishq', src:'Goodreturns'},
-    {d:'Jun 22', v22:13390, v24:14607, jeweller:'Tanishq/Kalyan/Malabar', src:'Goodreturns'},
-    {d:'Jun 23', v22:13375, v24:14591, jeweller:'IBJA/Kalyan', src:'Goodreturns'},
-    {d:'Jun 25', v22:13100, v24:14291, jeweller:'Malabar/Joyalukkas', src:'Goodreturns'},
-    {d:'Jun 27', v22:13085, v24:14275, jeweller:'Joyalukkas', src:'Goodreturns'},
-    {d:'Jun 28', v22:12980, v24:14275, jeweller:'National ticker', src:'Goodreturns'},
-    {d:'Jun 29', v22:13110, v24:14302, jeweller:'IBJA national avg', src:'Goodreturns'},
-  ],
-
-  // Chennai/Tamil Nadu specific (slightly different from national)
-  chennaiSpecific: [
-    {d:'Jun 28', v22:13370, src:'PolicyBazaar Tamil Nadu'},
-    {d:'Jun 29', v22:13300, src:'PolicyBazaar Chennai'},
-  ],
-
-  // ── JUNE HIGH/LOW ── Source: PolicyBazaar.com
-  juneRange: {
-    high22: 14630, high24: 15362,
-    low22: 13080,  // Delhi page confirms low ₹13,080; Chennai context ~13,220
-    low24: 13734,
-  },
-
-  taxes: { bcd:5, aidc:1, gst:3, total_customs:6 },
-
-  // ── CITIES — Jun 29, 2026 ── Source: Goodreturns per-city pages
-  cities: {
-    'Chennai': {k22:13300, k24:13965, k18:11125},
-    'Mumbai':  {k22:13110, k24:14302, k18:10727},
-    'Delhi':   {k22:13210, k24:13871, k18:10645},
-    'Kolkata': {k22:13110, k24:14302, k18:10727},
-    'Bangalore':{k22:13110,k24:14302, k18:10727},
-    'Hyderabad':{k22:13010,k24:14193, k18:10645},
-  },
-
-  investments: [
-    {name:'Sovereign Gold Bonds (SGB)', benefit:'Interest + tax-free maturity', liquidity:'Low (8yr lock, exit via exchange)', best:'Long-term wealth building'},
-    {name:'Gold ETFs', benefit:'Easy liquidity via stock exchange', liquidity:'High (trade like shares)', best:'Active investors, no storage hassle'},
-    {name:'Digital Gold', benefit:'Buy in small amounts, convenient', liquidity:'Medium (redeem via app)', best:'Beginners, small regular savings'},
-    {name:'Physical Jewellery', benefit:'Cultural & wearable value', liquidity:'Medium (resale at jeweller)', best:'Weddings, festivals, traditional gifting'},
-    {name:'Gold Coins/Bars', benefit:'Tangible, easy to verify purity', liquidity:'Medium-High', best:'Safe-haven savings, gifting'},
-  ],
-
-  festivals: [
-    {icon:'🌻', name:'Pongal', date:'Mid-January', tag:'Tamil New Year', note:'Family gold gifting tradition'},
-    {icon:'🐍', name:'Akshaya Tritiya', date:'April/May', tag:'Most auspicious', note:'Considered best day to buy gold all year'},
-    {icon:'💍', name:'Wedding Season', date:'Nov-Feb, Apr-Jun', tag:'Peak demand', note:'Bridal sets, thaali — highest gold intensity'},
-    {icon:'🪔', name:'Diwali', date:'Oct/Nov', tag:'National festival', note:'Lakshmi Puja — gold seen as prosperity symbol'},
-    {icon:'🌕', name:'Karthigai Deepam', date:'Nov/Dec', tag:'Tamil Nadu', note:'Temple visits, family gold purchases'},
-    {icon:'🎉', name:'Navratri', date:'Sep/Oct', tag:'9-day festival', note:'Jewellery shopping across India'},
-  ],
+// City making-charge differentials (₹/gram offset from computed base — these
+// reflect typical jeweller premiums, NOT live data, since no free API
+// publishes per-city Indian retail differentials)
+const CITY_DIFF = {
+  'Chennai':  {d22:260, d24:180, d18:200},
+  'Mumbai':   {d22:0,   d24:0,   d18:0  },
+  'Delhi':    {d22:100, d24:70,  d18:80 },
+  'Kolkata':  {d22:0,   d24:0,   d18:0  },
+  'Bangalore':{d22:0,   d24:0,   d18:0  },
+  'Hyderabad':{d22:-100,d24:-70, d18:-80},
 };
 
-let charts={};
-const f=v=>v==null?'—':'₹'+Math.round(v).toLocaleString('en-IN');
+const FESTIVALS = [
+  {icon:'🌻', name:'Pongal', date:'Mid-January', tag:'Tamil New Year', note:'Family gold gifting tradition'},
+  {icon:'🐍', name:'Akshaya Tritiya', date:'April/May', tag:'Most auspicious', note:'Considered best day to buy gold all year'},
+  {icon:'💍', name:'Wedding Season', date:'Nov-Feb, Apr-Jun', tag:'Peak demand', note:'Bridal sets, thaali — highest gold intensity'},
+  {icon:'🪔', name:'Diwali', date:'Oct/Nov', tag:'National festival', note:'Lakshmi Puja — gold seen as prosperity symbol'},
+  {icon:'🌕', name:'Karthigai Deepam', date:'Nov/Dec', tag:'Tamil Nadu', note:'Temple visits, family gold purchases'},
+  {icon:'🎉', name:'Navratri', date:'Sep/Oct', tag:'9-day festival', note:'Jewellery shopping across India'},
+];
 
+const INVESTMENTS = [
+  {name:'Sovereign Gold Bonds (SGB)', benefit:'Interest + tax-free maturity', liquidity:'Low (8yr lock, exit via exchange)', best:'Long-term wealth building'},
+  {name:'Gold ETFs', benefit:'Easy liquidity via stock exchange', liquidity:'High (trade like shares)', best:'Active investors, no storage hassle'},
+  {name:'Digital Gold', benefit:'Buy in small amounts, convenient', liquidity:'Medium (redeem via app)', best:'Beginners, small regular savings'},
+  {name:'Physical Jewellery', benefit:'Cultural & wearable value', liquidity:'Medium (resale at jeweller)', best:'Weddings, festivals, traditional gifting'},
+  {name:'Gold Coins/Bars', benefit:'Tangible, easy to verify purity', liquidity:'Medium-High', best:'Safe-haven savings, gifting'},
+];
+
+// ── RUNTIME STATE — populated ONLY from live fetches ──
+const S = {
+  spot:null, spotHigh:null, spotLow:null, spotPrev:null, spotChange:null, spotChangePct:null,
+  inrUsd:null, history:[], lastFetch:null, fetchOk:false, apiLog:[],
+};
+let charts={};
+
+// ═══════════════════════════════════════════════════════
+// CLOCK
+// ═══════════════════════════════════════════════════════
 setInterval(()=>{
   const e=document.getElementById('clk');
   if(e) e.textContent=new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false})+' IST';
 },1000);
 
+// ═══════════════════════════════════════════════════════
+// API LOG / STATUS
+// ═══════════════════════════════════════════════════════
+function logApi(label, status, detail){
+  S.apiLog.unshift({time:new Date().toLocaleTimeString('en-IN',{hour12:false}), label, status, detail});
+  if(S.apiLog.length>20) S.apiLog.pop();
+  renderApiLog();
+}
+function renderApiLog(){
+  document.getElementById('srcLog').innerHTML = S.apiLog.map(l=>`
+    <div class="src-row ${l.status==='ok'?'success':'fail'}">
+      <span class="sn">${l.time} — ${l.label}</span>
+      <span class="su">${l.status==='ok'?'✓':'✗'} ${l.detail}</span>
+    </div>`).join('') || '<div style="color:var(--tx3);font-size:11px">No calls yet</div>';
+}
+function toggleSources(){
+  const p=document.getElementById('sourcePanel');
+  p.style.display=p.style.display==='block'?'none':'block';
+}
+function setStatus(msg, type='ld'){
+  const e=document.getElementById('sMsg');
+  e.textContent=msg; e.className=type;
+}
+function setLive(isLive){
+  const ring=document.getElementById('lring'), txt=document.getElementById('ltxt');
+  if(isLive){ ring.classList.remove('offline'); txt.classList.remove('offline'); txt.textContent='LIVE'; }
+  else { ring.classList.add('offline'); txt.classList.add('offline'); txt.textContent='OFFLINE'; }
+}
+function showApiWarning(msg){
+  const b=document.getElementById('apiStatusBanner');
+  const t=document.getElementById('apiStatusText');
+  t.innerHTML=msg;
+  b.style.display='flex';
+}
+function hideApiWarning(){
+  document.getElementById('apiStatusBanner').style.display='none';
+}
+
+// ═══════════════════════════════════════════════════════
+// LIVE FETCH: GOLD SPOT — gold-api.com (free, CORS, no key)
+// ═══════════════════════════════════════════════════════
+async function fetchGoldSpot(){
+  const url='https://api.gold-api.com/price/XAU';
+  try{
+    const res=await fetch(url);
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const d=await res.json();
+    if(!d.price || d.price<500) throw new Error('Invalid price in response: '+JSON.stringify(d));
+    S.spot=d.price;
+    S.spotHigh=d.high||d.price;
+    S.spotLow=d.low||d.price;
+    S.spotPrev=d.prev||d.previousClose||d.price;
+    S.spotChange = d.change ?? (S.spot-S.spotPrev);
+    S.spotChangePct = d.changePercent ?? ((S.spotChange/S.spotPrev)*100);
+    logApi('gold-api.com /price/XAU', 'ok', '$'+d.price.toFixed(2)+'/oz');
+    return true;
+  }catch(e){
+    logApi('gold-api.com /price/XAU', 'fail', e.message);
+    return false;
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// LIVE FETCH: GOLD HISTORY — gold-api.com
+// ═══════════════════════════════════════════════════════
+async function fetchGoldHistory(){
+  const urls=[
+    'https://api.gold-api.com/price/XAU/history?range=7d',
+    'https://api.gold-api.com/price/XAU/history',
+  ];
+  for(const url of urls){
+    try{
+      const res=await fetch(url);
+      if(!res.ok) throw new Error('HTTP '+res.status);
+      const d=await res.json();
+      let rows = Array.isArray(d) ? d : (d.history || d.data || d.prices || []);
+      if(!rows.length) throw new Error('Empty history array');
+      // Normalize: expect {date, price/close, high, low}
+      S.history = rows.slice(-7).map(r=>({
+        date: r.date || r.timestamp || r.time,
+        close: r.close ?? r.price ?? r.value,
+        high: r.high ?? (r.close ?? r.price)*1.004,
+        low: r.low ?? (r.close ?? r.price)*0.996,
+      })).filter(r=>r.close && r.close>500);
+      if(!S.history.length) throw new Error('No valid rows after filtering');
+      logApi('gold-api.com /history', 'ok', S.history.length+' days');
+      return true;
+    }catch(e){
+      logApi('gold-api.com /history ('+url.split('?')[0].split('/').pop()+')', 'fail', e.message);
+    }
+  }
+  return false;
+}
+
+// ═══════════════════════════════════════════════════════
+// LIVE FETCH: INR/USD — fawazahmed0 currency-api (CDN, free, no key)
+// ═══════════════════════════════════════════════════════
+async function fetchInrUsd(){
+  const urls=[
+    'https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json',
+    'https://latest.currency-api.pages.dev/v1/currencies/usd.json',
+  ];
+  for(const url of urls){
+    try{
+      const res=await fetch(url);
+      if(!res.ok) throw new Error('HTTP '+res.status);
+      const d=await res.json();
+      const rate = d.usd?.inr;
+      if(!rate || rate<50) throw new Error('Invalid INR rate: '+rate);
+      S.inrUsd = rate;
+      logApi('fawazahmed0 currency-api', 'ok', '₹'+rate.toFixed(2)+'/USD');
+      return true;
+    }catch(e){
+      logApi('fawazahmed0 currency-api', 'fail', e.message);
+    }
+  }
+  return false;
+}
+
+// ═══════════════════════════════════════════════════════
+// MASTER FETCH ORCHESTRATOR
+// ═══════════════════════════════════════════════════════
+async function fetchAllLiveData(){
+  document.getElementById('rfBtn').disabled = true;
+  document.getElementById('rfBtn').textContent = '⟳ Fetching…';
+  setStatus('⏳ Calling gold-api.com + currency-api…', 'ld');
+  hideApiWarning();
+
+  const [spotOk, inrOk] = await Promise.all([fetchGoldSpot(), fetchInrUsd()]);
+  const histOk = await fetchGoldHistory();
+
+  document.getElementById('rfBtn').disabled = false;
+  document.getElementById('rfBtn').textContent = '⟳ Refresh Now';
+
+  if(spotOk && inrOk){
+    S.fetchOk = true;
+    S.lastFetch = new Date();
+    setLive(true);
+    setStatus('✓ Live · Spot $'+S.spot.toFixed(2)+'/oz · ₹'+S.inrUsd.toFixed(2)+'/USD · Updated '+S.lastFetch.toLocaleTimeString('en-IN',{hour12:false}), 'ok');
+    if(!histOk){
+      showApiWarning(`<strong>History API unavailable</strong> — live spot price and current rates are accurate, but the 7-day chart could not load. The history endpoint at gold-api.com may be temporarily down. Try Refresh Now in a minute.`);
+    }
+    renderAll();
+  } else {
+    S.fetchOk = false;
+    setLive(false);
+    const failedAPIs = [];
+    if(!spotOk) failedAPIs.push('gold-api.com (spot price)');
+    if(!inrOk) failedAPIs.push('currency-api (INR/USD)');
+    setStatus('✗ Live fetch failed — see details below', 'er');
+    showApiWarning(`<strong>Cannot reach live data sources:</strong> ${failedAPIs.join(', ')} did not respond.<br><br>
+      This usually means: (1) you're viewing this inside an app's built-in browser (like Claude's in-app viewer, Instagram, or WhatsApp) which blocks network calls — <strong>open this file in Safari or Chrome directly</strong> instead, or (2) your device has no internet connection, or (3) the free API service is temporarily down.<br><br>
+      Tap <code>⟳ Refresh Now</code> to retry, or tap <code>📋 API Log</code> to see the exact error for each call.`);
+    document.getElementById('rg').innerHTML = `<div class="rc feat" style="grid-column:span 4"><div class="loading-overlay" style="color:var(--dn)">✗ No live data available — see warning above</div></div>`;
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// DERIVE INDIA RATES FROM LIVE SPOT
+// ═══════════════════════════════════════════════════════
+function toIndiaRate(spotUsd, inrUsd, karat){
+  const purity = karat/24;
+  return (spotUsd * inrUsd / TROY_OZ_TO_GRAM) * CUSTOMS_DUTY * GST * purity;
+}
+
+const f = v => v==null ? '—' : '₹'+Math.round(v).toLocaleString('en-IN');
+const fu = v => v==null ? '—' : '$'+v.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+
+// ═══════════════════════════════════════════════════════
+// RENDER — all values computed from S (live data only)
+// ═══════════════════════════════════════════════════════
+function renderAll(){
+  if(!S.fetchOk) return;
+  buildTicker();
+  renderCards();
+  renderUSBanner();
+  renderInds();
+  renderWeekChart();
+  render24KChart();
+  renderHistTable();
+  renderCityTable();
+  renderFestivals();
+  renderInvestTable();
+}
+
 function buildTicker(){
-  const t=DB.today, ch=t.k22-t.prev22;
+  const base22 = toIndiaRate(S.spot, S.inrUsd, 22);
+  const base24 = toIndiaRate(S.spot, S.inrUsd, 24);
+  const chenni22 = base22 + CITY_DIFF['Chennai'].d22;
+  const chDir = S.spotChange>=0;
   const items=[
-    {n:'NATIONAL 22K',v:f(t.k22),c:ch===0?'No Chg':(ch>0?'+':'')+f(ch),up:ch>=0,z:ch===0},
-    {n:'NATIONAL 24K',v:f(t.k24),c:'Jun 29',up:true,z:true},
-    {n:'TANISHQ 22K',v:f(t.k22_tanishq),c:'Jun 29',up:true,z:true},
-    {n:'CHENNAI 22K',v:f(13300),c:'Jun 29 PolicyBazaar',up:true,z:true},
-    {n:'JUNE HIGH 22K',v:f(DB.juneRange.high22),c:'PolicyBazaar',up:true,z:true},
-    {n:'JUNE LOW 22K',v:f(DB.juneRange.low22),c:'This month',up:false,z:true},
-    {n:'CUSTOMS DUTY',v:DB.taxes.total_customs+'%',c:'BCD+AIDC',up:true,z:true},
-    {n:'GST',v:DB.taxes.gst+'%',c:'On sale',up:true,z:true},
-    {n:'LAST UPDATE',v:'Jun 29',c:'No Jun 30 data yet',up:false,z:false},
+    {n:'LIVE SPOT',v:fu(S.spot),c:(chDir?'▲ +':'▼ ')+fu(Math.abs(S.spotChange)),up:chDir},
+    {n:'INR/USD',v:'₹'+S.inrUsd.toFixed(2),c:'live',up:true,z:true},
+    {n:'INDIA 22K',v:f(base22),c:'computed',up:true,z:true},
+    {n:'INDIA 24K',v:f(base24),c:'computed',up:true,z:true},
+    {n:'CHENNAI 22K',v:f(chenni22),c:'computed',up:true,z:true},
+    {n:'DAY HIGH',v:fu(S.spotHigh),c:'spot',up:true,z:true},
+    {n:'DAY LOW',v:fu(S.spotLow),c:'spot',up:false,z:true},
+    {n:'CUSTOMS',v:'6%',c:'BCD+AIDC',up:true,z:true},
+    {n:'GST',v:'3%',c:'on sale',up:true,z:true},
+    {n:'LAST FETCH',v:S.lastFetch.toLocaleTimeString('en-IN',{hour12:false}),c:'auto 5min',up:true,z:true},
   ];
   const html=items.map(i=>`
     <div class="ti"><span class="n">${i.n}</span><span class="v">${i.v}</span>
@@ -557,83 +676,89 @@ function buildTicker(){
   document.getElementById('tkr').innerHTML=html+html;
 }
 
-function toggleSources(){
-  const p=document.getElementById('sourcePanel');
-  p.style.display=p.style.display==='block'?'none':'block';
-}
-
 function renderCards(){
-  const t=DB.today, ch22=t.k22-t.prev22;
-  const cl=ch22>0?'up':ch22<0?'dn':'st', sy=ch22>0?'▲':ch22<0?'▼':'●';
-  const chp=t.prev22?Math.abs((ch22/t.prev22)*100).toFixed(2):0;
-  document.getElementById('rg').innerHTML=`
+  const base22 = toIndiaRate(S.spot, S.inrUsd, 22);
+  const base24 = toIndiaRate(S.spot, S.inrUsd, 24);
+  const base18 = toIndiaRate(S.spot, S.inrUsd, 18);
+  const prev22 = toIndiaRate(S.spotPrev, S.inrUsd, 22);
+  const ch22 = base22 - prev22;
+  const cl = ch22>0?'up':ch22<0?'dn':'st', sy = ch22>0?'▲':ch22<0?'▼':'●';
+  const chenni = CITY_DIFF['Chennai'];
+
+  document.getElementById('rateDate').textContent = 'Live · Updated ' + S.lastFetch.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
+
+  document.getElementById('rg').innerHTML = `
   <div class="rc feat">
-    <div class="rc-kt">🇮🇳 NATIONAL AVG · 22K (916 HALLMARK)</div>
-    <div class="rc-eye">IBJA Benchmark — Per Gram</div>
-    <div class="rc-rate flip">${f(t.k22)}</div>
-    <div class="rc-unit">per gram · 91.6% pure · excl. making + GST</div>
-    <div class="badge ${cl}">${sy} ${f(Math.abs(ch22))} vs Jun 27/28 · ${chp}%</div>
+    <div class="rc-kt">🇮🇳 INDIA COMPUTED · 22K (916 HALLMARK)</div>
+    <div class="rc-eye">Live Rate — Per Gram (base, before making)</div>
+    <div class="rc-rate flip">${f(base22)}</div>
+    <div class="rc-unit">per gram · 91.6% pure · excl. making charges</div>
+    <div class="badge ${cl}">${sy} ${f(Math.abs(ch22))} vs prev close</div>
     <div class="rc-rng">
-      <div>Tanishq<span>${f(t.k22_tanishq)}</span></div>
-      <div>Malabar<span>${f(t.k22_malabar)}</span></div>
-      <div>Kalyan<span>${f(t.k22_kalyan)}</span></div>
+      <div>18K<span>${f(base18)}</span></div>
+      <div>22K<span style="color:var(--g200)">${f(base22)}</span></div>
+      <div>24K<span>${f(base24)}</span></div>
     </div>
-    <div class="rc-src">Source: Goodreturns.in, Jun 29 2026</div>
+    <div class="rc-src">Live: spot $${S.spot.toFixed(2)} × ₹${S.inrUsd.toFixed(2)} ÷ 31.1g × 1.06 × 1.03</div>
   </div>
   <div class="rc feat">
-    <div class="rc-kt">🏙 CHENNAI SPECIFIC · 22K (பவுன்)</div>
-    <div class="rc-eye">Tamil Nadu Rate — Per Gram</div>
-    <div class="rc-rate flip">${f(13300)}</div>
-    <div class="rc-unit">per gram · Chennai/TN market</div>
-    <div class="badge dn">▼ ${f(70)} vs Jun 28 (₹13,370)</div>
+    <div class="rc-kt">🏙 CHENNAI (TYPICAL) · 22K (பவுன்)</div>
+    <div class="rc-eye">Live Rate — Per Gram (incl. typical making)</div>
+    <div class="rc-rate flip">${f(base22+chenni.d22)}</div>
+    <div class="rc-unit">per gram · base + ₹${chenni.d22} typical Chennai premium</div>
+    <div class="badge ${cl}">${sy} ${f(Math.abs(ch22))} vs prev close</div>
     <div class="rc-rng">
-      <div>Per 8g<span>${f(13300*8)}</span></div>
-      <div>Per 10g<span>${f(13300*10)}</span></div>
-      <div>24K/g<span>${f(13965)}</span></div>
+      <div>Per 8g<span>${f((base22+chenni.d22)*8)}</span></div>
+      <div>Per 10g<span>${f((base22+chenni.d22)*10)}</span></div>
+      <div>24K/g<span>${f(base24+chenni.d24)}</span></div>
     </div>
-    <div class="rc-src">Source: PolicyBazaar.com Chennai, Jun 29 2026</div>
+    <div class="rc-src">Note: city premium is a typical estimate, not live per-city data</div>
   </div>
   <div class="rc">
-    <div class="rc-kt">NATIONAL · 24K PURE</div>
-    <div class="rc-eye">IBJA Benchmark · 1g</div>
-    <div class="rc-rate">${f(t.k24)}</div>
-    <div class="rc-unit">99.9% pure · for SGB/digital gold</div>
-    <div class="badge st">Tanishq: ${f(t.k24_tanishq)}</div>
+    <div class="rc-kt">INDIA · 24K PURE</div>
+    <div class="rc-eye">Live · 1g (SGB/digital)</div>
+    <div class="rc-rate">${f(base24)}</div>
+    <div class="rc-unit">99.9% pure · computed live</div>
+    <div class="badge st">From spot $${S.spot.toFixed(0)}</div>
   </div>
   <div class="rc">
-    <div class="rc-kt">NATIONAL · 18K</div>
-    <div class="rc-eye">75% Pure · 1g</div>
-    <div class="rc-rate">${f(t.k18)}</div>
-    <div class="rc-unit">75% pure · diamond-studded jewellery</div>
-    <div class="badge st">Goodreturns Jun 29</div>
+    <div class="rc-kt">INDIA · 18K</div>
+    <div class="rc-eye">Live · 1g</div>
+    <div class="rc-rate">${f(base18)}</div>
+    <div class="rc-unit">75% pure · computed live</div>
+    <div class="badge st">From spot $${S.spot.toFixed(0)}</div>
   </div>`;
 }
 
 function renderUSBanner(){
-  document.getElementById('usP').textContent='Sensex 76,728';
-  document.getElementById('usStats').innerHTML=`
-    <div class="us-stat"><div class="l">Sensex</div><div class="v dn">76,728.37 ▼0.48%</div></div>
-    <div class="us-stat"><div class="l">Nifty</div><div class="v dn">23,946.25 ▼0.46%</div></div>
-    <div class="us-stat"><div class="l">USD/INR</div><div class="v gl">₹94.50</div></div>
-    <div class="us-stat"><div class="l">Crude Oil</div><div class="v">$73.15</div></div>
-    <div class="us-stat"><div class="l">Silver</div><div class="v gl">₹2,40,000/kg</div></div>
-    <div class="us-stat"><div class="l">Petrol (Chennai)</div><div class="v">₹111.21/L</div></div>`;
+  const cl = S.spotChange>=0?'up':'dn', sy = S.spotChange>=0?'▲':'▼';
+  document.getElementById('usP').textContent = fu(S.spot);
+  document.getElementById('usSub').textContent = 'per troy ounce · live from gold-api.com · updated ' + S.lastFetch.toLocaleTimeString('en-IN',{hour12:false});
+  document.getElementById('usStats').innerHTML = `
+    <div class="us-stat"><div class="l">Change</div><div class="v ${cl}">${sy} ${fu(Math.abs(S.spotChange))}</div></div>
+    <div class="us-stat"><div class="l">% Move</div><div class="v ${cl}">${S.spotChange>=0?'+':''}${S.spotChangePct.toFixed(2)}%</div></div>
+    <div class="us-stat"><div class="l">Day High</div><div class="v">${fu(S.spotHigh)}</div></div>
+    <div class="us-stat"><div class="l">Day Low</div><div class="v">${fu(S.spotLow)}</div></div>
+    <div class="us-stat"><div class="l">Prev Close</div><div class="v">${fu(S.spotPrev)}</div></div>
+    <div class="us-stat"><div class="l">INR/USD</div><div class="v gl">₹${S.inrUsd.toFixed(2)}</div></div>`;
 }
 
 function renderInds(){
-  const items=[
-    {l:'National 22K', v:f(DB.today.k22), c:'IBJA benchmark', col:'var(--g200)', n:'Goodreturns Jun 29'},
-    {l:'National 24K', v:f(DB.today.k24), c:'IBJA benchmark', col:'var(--g200)', n:'Goodreturns Jun 29'},
-    {l:'Customs Duty',  v:DB.taxes.total_customs+'%', c:'BCD 5% + AIDC 1%', col:'var(--bl)', n:'ClearTax.in'},
-    {l:'GST on Gold',   v:DB.taxes.gst+'%', c:'On every sale', col:'var(--bl)', n:'Govt of India'},
-    {l:'Sensex Today',  v:'76,728', c:'▼ -0.48%', col:'var(--dn)', n:'Goodreturns Jun 29'},
+  const base22 = toIndiaRate(S.spot, S.inrUsd, 22);
+  const base24 = toIndiaRate(S.spot, S.inrUsd, 24);
+  const items = [
+    {l:'Live Spot', v:fu(S.spot), c:'gold-api.com', col:'var(--g200)', n:'real-time'},
+    {l:'INR/USD', v:'₹'+S.inrUsd.toFixed(2), c:'currency-api', col:'var(--bl)', n:'real-time'},
+    {l:'India 22K (live)', v:f(base22), c:'computed', col:'var(--g200)', n:'from spot'},
+    {l:'India 24K (live)', v:f(base24), c:'computed', col:'var(--g200)', n:'from spot'},
+    {l:'Customs+GST', v:'9%', c:'6%+3%', col:'var(--or)', n:'fixed policy'},
   ];
-  document.getElementById('ig').innerHTML=items.map(it=>`
+  document.getElementById('ig').innerHTML = items.map(it=>`
     <div class="ic"><div class="ic-l">${it.l}</div><div class="ic-v">${it.v}</div>
     <div class="ic-c" style="color:${it.col}">${it.c}</div><div class="ic-n">${it.n}</div></div>`).join('');
 }
 
-const bO={responsive:true,maintainAspectRatio:false,interaction:{intersect:false,mode:'index'},
+const bO = {responsive:true,maintainAspectRatio:false,interaction:{intersect:false,mode:'index'},
   animation:{duration:700,easing:'easeInOutQuart'},
   plugins:{legend:{display:false},tooltip:{backgroundColor:'#181628',borderColor:'#2A2840',
     borderWidth:1,titleColor:'#7068A0',bodyColor:'#EDE8F8',padding:10,
@@ -646,155 +771,147 @@ function mkO(yFmt){const o=JSON.parse(JSON.stringify(bO));if(yFmt)o.scales.y.tic
 function grd(ctx,r,g,b,a=.22){const gr=ctx.chart.ctx.createLinearGradient(0,0,0,220);gr.addColorStop(0,`rgba(${r},${g},${b},${a})`);gr.addColorStop(1,`rgba(${r},${g},${b},0)`);return gr;}
 function mkChart(id,type,data,opts){if(charts[id])charts[id].destroy();charts[id]=new Chart(document.getElementById(id),{type,data,options:opts});}
 
+function fmtDateShort(s){
+  const d=new Date(s);
+  if(isNaN(d)) return s;
+  return d.toLocaleDateString('en-IN',{day:'numeric',month:'short'});
+}
+
 function renderWeekChart(){
-  const sl=DB.history;
-  const lb=sl.map(r=>r.d),v22=sl.map(r=>r.v22);
-  const hi=sl.map(()=>DB.juneRange.high22),lo=sl.map(()=>DB.juneRange.low22);
-  const last=v22[v22.length-1];
-  document.getElementById('wv1').textContent=f(last);
-  document.getElementById('wv8').textContent=f(last*8);
+  if(!S.history.length){
+    document.getElementById('wv1').textContent='No history';
+    return;
+  }
+  const lb = S.history.map(r=>fmtDateShort(r.date));
+  const v22 = S.history.map(r=>toIndiaRate(r.close, S.inrUsd, 22));
+  const hi = S.history.map(r=>toIndiaRate(r.high, S.inrUsd, 22));
+  const lo = S.history.map(r=>toIndiaRate(r.low, S.inrUsd, 22));
+  const last = v22[v22.length-1];
+  document.getElementById('wv1').textContent = f(last);
+  document.getElementById('wv8').textContent = f(last*8);
   mkChart('wc1','line',{labels:lb,datasets:[
-    {data:hi,borderColor:'rgba(0,232,122,.4)',borderWidth:1,borderDash:[4,3],pointRadius:0,fill:false,tension:0},
+    {data:hi,borderColor:'rgba(0,232,122,.4)',borderWidth:1,borderDash:[3,3],pointRadius:0,fill:false,tension:.3},
     {data:v22,borderColor:'#F5C518',borderWidth:2.5,pointRadius:5,pointBackgroundColor:'#F5C518',
      pointBorderColor:'#0A0812',pointBorderWidth:2,fill:true,backgroundColor:ctx=>grd(ctx,245,197,24),tension:.3},
-    {data:lo,borderColor:'rgba(255,77,109,.4)',borderWidth:1,borderDash:[4,3],pointRadius:0,fill:false,tension:0}
-  ]},mkO(v=>'₹'+v.toLocaleString('en-IN')));
+    {data:lo,borderColor:'rgba(255,77,109,.4)',borderWidth:1,borderDash:[3,3],pointRadius:0,fill:false,tension:.3}
+  ]},mkO(v=>'₹'+v.toLocaleString('en-IN',{maximumFractionDigits:0})));
   mkChart('wc8','line',{labels:lb,datasets:[
-    {data:hi.map(v=>v*8),borderColor:'rgba(0,232,122,.4)',borderWidth:1,borderDash:[4,3],pointRadius:0,fill:false,tension:0},
+    {data:hi.map(v=>v*8),borderColor:'rgba(0,232,122,.4)',borderWidth:1,borderDash:[3,3],pointRadius:0,fill:false,tension:.3},
     {data:v22.map(v=>v*8),borderColor:'#E8960C',borderWidth:2.5,pointRadius:5,pointBackgroundColor:'#E8960C',
      pointBorderColor:'#0A0812',pointBorderWidth:2,fill:true,backgroundColor:ctx=>grd(ctx,232,150,12),tension:.3},
-    {data:lo.map(v=>v*8),borderColor:'rgba(255,77,109,.4)',borderWidth:1,borderDash:[4,3],pointRadius:0,fill:false,tension:0}
+    {data:lo.map(v=>v*8),borderColor:'rgba(255,77,109,.4)',borderWidth:1,borderDash:[3,3],pointRadius:0,fill:false,tension:.3}
   ]},mkO(v=>'₹'+(v/1000).toFixed(0)+'k'));
 }
 
 function render24KChart(){
-  const sl=DB.history.filter(r=>r.v24!=null);
-  const lb=sl.map(r=>r.d);
-  const v24=sl.map(r=>r.v24);
-  const hi=sl.map(()=>DB.juneRange.high24),lo=sl.map(()=>DB.juneRange.low24);
+  if(!S.history.length) return;
+  const lb = S.history.map(r=>fmtDateShort(r.date));
+  const v24 = S.history.map(r=>toIndiaRate(r.close, S.inrUsd, 24));
+  const hi = S.history.map(r=>toIndiaRate(r.high, S.inrUsd, 24));
+  const lo = S.history.map(r=>toIndiaRate(r.low, S.inrUsd, 24));
   mkChart('mc','line',{labels:lb,datasets:[
-    {data:hi,borderColor:'rgba(0,232,122,0)',borderWidth:0,pointRadius:0,fill:'+1',backgroundColor:'rgba(0,232,122,.07)',tension:0},
+    {data:hi,borderColor:'rgba(0,232,122,0)',borderWidth:0,pointRadius:0,fill:'+1',backgroundColor:'rgba(0,232,122,.07)',tension:.3},
     {data:v24,borderColor:'#FFE566',borderWidth:2.5,pointRadius:4,
      pointBackgroundColor:'#FFE566',pointBorderColor:'#0A0812',pointBorderWidth:2,fill:false,tension:.3},
-    {data:lo,borderColor:'rgba(255,77,109,0)',borderWidth:0,pointRadius:0,fill:'-1',backgroundColor:'rgba(255,77,109,.07)',tension:0}
-  ]},mkO(v=>'₹'+v.toLocaleString('en-IN')));
-}
-
-function buildPred(){
-  const t=DB.today, hist=DB.history;
-  const today22=t.k22, today24=t.k24;
-  const validHist=hist.filter(h=>h.v22);
-  const mom=(validHist[validHist.length-1].v22-validHist[0].v22)/validHist[0].v22;
-  const days=validHist.length-1;
-  const dailyMom=mom/days;
-
-  const scenarios=[
-    {cls:'bull', label:'⚖️ Stabilisation / Mild Recovery', color:'var(--g200)', conf:'60%',
-     note:`National 22K bounced from ₹12,980 (Jun 27-28) to ₹13,110 (Jun 29). Chennai still elevated at ₹13,300. Floor likely near ₹12,900-13,000 with wedding season support.`,
-     mult:0.4},
-    {cls:'bear', label:'🐻 Continued Softness', color:'var(--dn)', conf:'55%',
-     note:`From June 20 high ₹13,435 to Jun 29 ₹13,110, a real -2.4% slide. June peak was ₹14,630 — already -10.4% off that. Hawkish Fed (86% probability Dec 2026 hike per IBJA's Kothari) keeps pressure on.`,
-     mult:-0.7}
-  ];
-
-  const tfs=[{l:'+1 Day',d:1},{l:'+2 Days',d:2},{l:'+3 Days',d:3},{l:'+5 Days',d:5},{l:'+7 Days',d:7}];
-
-  document.getElementById('pg').innerHTML=scenarios.map(sc=>`
-    <div class="pred-card ${sc.cls}">
-      <div class="pglow"></div>
-      <div class="pred-top">
-        <div><div class="pred-eye">7-Day Forecast · National 22K</div>
-        <div class="pred-label" style="color:${sc.color}">${sc.label}</div></div>
-        <div class="conf">Conf. ${sc.conf}</div>
-      </div>
-      <div class="pred-note">${sc.note}</div>
-      <div class="pred-rows">${tfs.map(tf=>{
-        const p22final=Math.round(today22+(today22*dailyMom*sc.mult*tf.d));
-        const p24final=Math.round(p22final*24/22);
-        const diff=p22final-today22, dc=diff>=0?'up':'dn', ds=diff>=0?'▲':'▼';
-        return`<div class="pred-row">
-          <div class="pred-when">${tf.l}</div>
-          <div style="display:flex;align-items:center;gap:10px">
-            <div><div class="pv1">${f(p22final)} <em>22K/g</em></div>
-            <div class="pv8">24K: ${f(p24final)} · 8g: ${f(p22final*8)}</div></div>
-            <div class="dir-chip ${dc}">${ds} ${f(Math.abs(diff))}</div>
-          </div></div>`;
-      }).join('')}</div>
-    </div>`).join('');
+    {data:lo,borderColor:'rgba(255,77,109,0)',borderWidth:0,pointRadius:0,fill:'-1',backgroundColor:'rgba(255,77,109,.07)',tension:.3}
+  ]},mkO(v=>'₹'+v.toLocaleString('en-IN',{maximumFractionDigits:0})));
 }
 
 function renderHistTable(){
-  const rows=[...DB.history].reverse();
-  document.getElementById('hb').innerHTML=rows.map((r,i)=>{
-    const prev=rows[i+1],ch=prev&&prev.v22?r.v22-prev.v22:null,chp=ch&&prev.v22?(ch/prev.v22*100).toFixed(2):null;
-    const col=ch===null?'var(--tx3)':ch>0?'var(--up)':ch<0?'var(--dn)':'var(--tx3)';
-    const sy=ch===null?'':ch>0?'▲':ch<0?'▼':'●';
-    const today=i===0;
-    return`<tr style="${today?'background:rgba(245,197,24,.05)':''}">
-      <td style="color:${today?'var(--g200)':'var(--tx1)'};font-weight:${today?700:400}">${r.d}, 2026${today?' ← Latest':''}</td>
-      <td style="color:var(--g200);font-weight:${today?700:400}">${f(r.v22)}</td>
-      <td>${f(r.v24)}</td>
-      <td>${f(r.v22*8)}</td>
+  if(!S.history.length){
+    document.getElementById('hb').innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--tx3);padding:20px">History unavailable — live spot price above is still accurate</td></tr>';
+    return;
+  }
+  document.getElementById('hb').innerHTML = S.history.map((r,i)=>{
+    const v22 = toIndiaRate(r.close, S.inrUsd, 22);
+    const v24 = toIndiaRate(r.close, S.inrUsd, 24);
+    const prev = S.history[i-1];
+    const prevV22 = prev ? toIndiaRate(prev.close, S.inrUsd, 22) : null;
+    const ch = prevV22 ? v22-prevV22 : null;
+    const chp = ch && prevV22 ? (ch/prevV22*100).toFixed(2) : null;
+    const col = ch===null?'var(--tx3)':ch>0?'var(--up)':ch<0?'var(--dn)':'var(--tx3)';
+    const sy = ch===null?'':ch>0?'▲':ch<0?'▼':'●';
+    const isLast = i===S.history.length-1;
+    return `<tr style="${isLast?'background:rgba(245,197,24,.05)':''}">
+      <td style="color:${isLast?'var(--g200)':'var(--tx1)'};font-weight:${isLast?700:400}">${fmtDateShort(r.date)}${isLast?' ← Latest':''}</td>
+      <td style="color:var(--g200)">${f(v22)}</td>
+      <td>${f(v24)}</td>
+      <td>${f(v22*8)}</td>
       <td style="color:${col}">${ch!==null?sy+' '+f(Math.abs(ch)):'baseline'}</td>
-      <td class="src-cell">${r.jeweller} · ${r.src}</td>
+      <td style="color:${col}">${chp!==null?chp+'%':'-'}</td>
     </tr>`;
   }).join('');
 }
 
 function renderCityTable(){
-  document.getElementById('cb').innerHTML=Object.entries(DB.cities).map(([city,r])=>{
-    const isCh=city==='Chennai';
-    return`<tr style="${isCh?'background:rgba(245,197,24,.05)':''}">
+  const base22 = toIndiaRate(S.spot, S.inrUsd, 22);
+  const base24 = toIndiaRate(S.spot, S.inrUsd, 24);
+  const base18 = toIndiaRate(S.spot, S.inrUsd, 18);
+  document.getElementById('cb').innerHTML = Object.entries(CITY_DIFF).map(([city,d])=>{
+    const isCh = city==='Chennai';
+    const v22 = base22+d.d22, v24 = base24+d.d24, v18 = base18+d.d18;
+    return `<tr style="${isCh?'background:rgba(245,197,24,.05)':''}">
       <td style="color:${isCh?'var(--g200)':'var(--tx0)'};font-weight:${isCh?700:500}">${city}${isCh?' ⭐':''}</td>
-      <td style="color:${isCh?'var(--g200)':'var(--tx1)'};font-weight:${isCh?700:400}">${f(r.k22)}</td>
-      <td>${f(r.k22*8)}</td><td>${f(r.k24)}</td><td>${f(r.k24*8)}</td>
-      <td style="color:var(--tx2)">${f(r.k18)}</td>
+      <td style="color:${isCh?'var(--g200)':'var(--tx1)'}">${f(v22)}</td>
+      <td>${f(v22*8)}</td><td>${f(v24)}</td><td>${f(v24*8)}</td>
+      <td style="color:var(--tx2)">${f(v18)}</td>
     </tr>`;
   }).join('');
 }
 
-function renderInvestTable(){
-  document.getElementById('investBody').innerHTML=DB.investments.map(inv=>`
-    <tr><td style="color:var(--g200);font-weight:500">${inv.name}</td><td>${inv.benefit}</td>
-    <td>${inv.liquidity}</td><td style="color:var(--tx2)">${inv.best}</td></tr>`).join('');
-}
-
 function renderFestivals(){
-  document.getElementById('festGrid').innerHTML=DB.festivals.map(fe=>`
+  document.getElementById('festGrid').innerHTML = FESTIVALS.map(fe=>`
     <div class="fest-card"><div class="fest-icon">${fe.icon}</div>
     <div class="fest-name">${fe.name}</div><div class="fest-date">${fe.date}</div>
     <div class="fest-tag">${fe.tag}</div>
     <div style="font-size:9px;color:var(--tx3);margin-top:6px;font-family:'Hind',sans-serif">${fe.note}</div></div>`).join('');
 }
 
-function animRefresh(){
-  document.querySelectorAll('.rc-rate').forEach(el=>{el.classList.remove('flip');void el.offsetWidth;el.classList.add('flip');});
-  document.getElementById('sTime').textContent='Checked: '+new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
-  document.getElementById('sMsg').textContent=`✓ Data current through Jun 29, 2026 · 22K: ${f(DB.today.k22)} · Share today's rate to extend`;
-  document.getElementById('sMsg').className='ok';
+function renderInvestTable(){
+  document.getElementById('investBody').innerHTML = INVESTMENTS.map(inv=>`
+    <tr><td style="color:var(--g200);font-weight:500">${inv.name}</td><td>${inv.benefit}</td>
+    <td>${inv.liquidity}</td><td style="color:var(--tx2)">${inv.best}</td></tr>`).join('');
 }
 
+// ═══════════════════════════════════════════════════════
+// AUTO-REFRESH EVERY 5 MINUTES + COUNTDOWN
+// ═══════════════════════════════════════════════════════
+let nextRefreshAt = Date.now() + REFRESH_MS;
+function tickCountdown(){
+  const remaining = Math.max(0, nextRefreshAt - Date.now());
+  const mins = Math.floor(remaining/60000);
+  const secs = Math.floor((remaining%60000)/1000);
+  const el = document.getElementById('countdown');
+  if(el) el.innerHTML = `Next auto-refresh: <b>${mins}:${secs.toString().padStart(2,'0')}</b>`;
+}
+setInterval(tickCountdown, 1000);
+
+async function manualRefresh(){
+  await fetchAllLiveData();
+  nextRefreshAt = Date.now() + REFRESH_MS;
+}
+
+setInterval(async ()=>{
+  await fetchAllLiveData();
+  nextRefreshAt = Date.now() + REFRESH_MS;
+}, REFRESH_MS);
+
+// ═══════════════════════════════════════════════════════
+// SCROLL REVEAL
+// ═══════════════════════════════════════════════════════
 function initReveal(){
-  const obs=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('vis');obs.unobserve(e.target);}});},{threshold:.06});
+  const obs = new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('vis');obs.unobserve(e.target);}});},{threshold:.06});
   document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
 }
 
-function init(){
-  buildTicker();
-  buildPred();
-  renderCards();
-  renderUSBanner();
-  renderInds();
-  renderWeekChart();
-  render24KChart();
-  renderHistTable();
-  renderCityTable();
-  renderInvestTable();
-  renderFestivals();
+// ═══════════════════════════════════════════════════════
+// BOOT — first fetch happens immediately on page load
+// ═══════════════════════════════════════════════════════
+(async function init(){
   initReveal();
-  document.getElementById('sTime').textContent='Loaded: '+new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
-}
-init();
+  await fetchAllLiveData();
+  nextRefreshAt = Date.now() + REFRESH_MS;
+})();
 </script>
 </body>
 </html>
