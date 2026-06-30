@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simultaneous Voice Translator</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1e1e2f;
+            color: #fff;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h2 { color: #00e5ff; }
+        .controls { margin-bottom: 20px; }
+        button {
+            padding: 15px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            margin: 0 10px;
+            transition: 0.2s;
+        }
+        #startBtn { background-color: #00e5ff; color: #000; }
+        #stopBtn { background-color: #ff3366; color: #fff; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        .chat-container {
+            width: 100%;
+            max-width: 600px;
+            background: #2a2a40;
+            padding: 20px;
+            border-radius: 10px;
+            height: 400px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .bubble {
+            padding: 10px 15px;
+            border-radius: 15px;
+            max-width: 80%;
+            animation: popIn 0.2s ease-out;
+        }
+
+        .english-bubble {
+            background-color: #39395f;
+            align-self: flex-start;
+            border-bottom-left-radius: 2px;
+        }
+
+        .tamil-bubble {
+            background-color: #00e5ff;
+            color: #000;
+            align-self: flex-end;
+            border-bottom-right-radius: 2px;
+            font-weight: bold;
+        }
+
+        @keyframes popIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Simultaneous Translator</h2>
+    <p style="color: #aaa; text-align:center; max-width: 500px;">
+        Warning: Because it translates immediately, audio may overlap if you speak too fast!
+    </p>
+    
+    <div class="controls">
+        <button id="startBtn">Start Simultaneous Audio</button>
+        <button id="stopBtn" disabled>Stop</button>
+    </div>
+
+    <div class="chat-container" id="chatContainer">
+        </div>
+
+    <script>
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        
+        if (!SpeechRecognition) {
+            alert("Your browser does not support Speech Recognition. Please use Google Chrome.");
+        } else {
+            const recognition = new SpeechRecognition();
+            
+            recognition.lang = 'en-US';
+            // CRITICAL CHANGE: Setting continuous to false forces the engine to spit out 
+            // results instantly at the slightest micro-pause, rather than waiting.
+            recognition.continuous = false; 
+            recognition.interimResults = false; 
+
+            let isListening = false;
+            const startBtn = document.getElementById('startBtn');
+            const stopBtn = document.getElementById('stopBtn');
+            const chatContainer = document.getElementById('chatContainer');
+
+            function addBubble(text, isEnglish) {
+                const div = document.createElement('div');
+                div.className = `bubble ${isEnglish ? 'english-bubble' : 'tamil-bubble'}`;
+                div.innerText = text;
+                chatContainer.appendChild(div);
+                chatContainer.scrollTop = chatContainer.scrollHeight; // Auto-scroll to bottom
+            }
+
+            startBtn.addEventListener('click', () => {
+                isListening = true;
+                recognition.start();
+                startBtn.disabled = true;
+                stopBtn.disabled = false;
+                addBubble("System active. Start speaking...", true);
+            });
+
+            stopBtn.addEventListener('click', () => {
+                isListening = false;
+                recognition.stop();
+                startBtn.disabled = false;
+                stopBtn.disabled = true;
+            });
+
+            // When a small chunk of speech is detected
+            recognition.onresult = async (event) => {
+                const transcript = event.results[0][0].transcript;
+                
+                if (transcript.trim() !== '') {
+                    addBubble(transcript, true); // Show English
+                    
+                    try {
+                        // Fetch translation immediately
+                        const response = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(transcript)}&langpair=en|ta`);
+                        const data = await response.json();
+                        
+                        if(data.responseData.translatedText) {
+                            const translated = data.responseData.translatedText;
+                            addBubble(translated, false); // Show Tamil
+                            speakTamil(translated);       // Play Audio Immediately
+                        }
+                    } catch (error) {
+                        console.error("Translation Error");
+                    }
+                }
+            };
+
+            // CRITICAL CHANGE: Auto-restart the microphone the millisecond it stops 
+            // so you can keep speaking while the audio plays.
+            recognition.onend = () => {
+                if (isListening) {
+                    recognition.start();
+                }
+            };
+
+            function speakTamil(text) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'ta-IN';
+                utterance.rate = 1.2; // Sped up slightly to keep pace with your speaking
+                
+                // We do NOT cancel previous audio. We let them queue/overlap to simulate 
+                // true simultaneous interpretation.
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+    </script>
+
+</body>
+</html>
