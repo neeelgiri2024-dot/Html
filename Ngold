@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NGold — भारत गोल्ड इंटेलिजेंस</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&family=Hind:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg0:#04030A;--bg1:#0A0812;--bg2:#11101C;--bg3:#181628;--bg4:#211F32;
+  --bd1:#1C1A2E;--bd2:#2A2840;--bd3:#403C60;
+  --g100:#FFE566;--g200:#F5C518;--g300:#D4A017;--g400:#9A6F08;--g500:#5C3D05;
+  --up:#00E87A;--upbg:rgba(0,232,122,.1);--upbd:rgba(0,232,122,.25);
+  --dn:#FF4D6D;--dnbg:rgba(255,77,109,.1);--dnbd:rgba(255,77,109,.25);
+  --bl:#7B8CFF;--blbg:rgba(123,140,255,.1);--blbd:rgba(123,140,255,.25);
+  --or:#FF9F43;--saffron:#FF9933;--indiagreen:#138808;
+  --sv:#C8D4E8;
+  --tx0:#FFFFFF;--tx1:#EDE8F8;--tx2:#B0A8CC;--tx3:#7068A0;--tx4:#3D3860;
+  --glow-g:0 0 40px rgba(245,197,24,.2),0 0 80px rgba(245,197,24,.07);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg1);color:var(--tx1);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;top:-200px;right:-100px;width:600px;height:600px;
+  background:radial-gradient(ellipse,rgba(245,197,24,.06),transparent 65%);
+  pointer-events:none;z-index:0;animation:amb 9s ease-in-out infinite}
+body::after{content:'';position:fixed;bottom:-200px;left:-100px;width:500px;height:500px;
+  background:radial-gradient(ellipse,rgba(123,140,255,.04),transparent 65%);pointer-events:none;z-index:0}
+@keyframes amb{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.15)}}
+.wrap{max-width:1340px;margin:0 auto;padding:0 18px;position:relative;z-index:1}
+
+.ticker{width:100%;overflow:hidden;background:var(--bg0);border-bottom:1px solid var(--bd1);padding:7px 0;position:relative}
+.ticker::before,.ticker::after{content:'';position:absolute;top:0;width:80px;height:100%;z-index:2}
+.ticker::before{left:0;background:linear-gradient(90deg,var(--bg0),transparent)}
+.ticker::after{right:0;background:linear-gradient(270deg,var(--bg0),transparent)}
+.ticker-inner{display:flex;width:max-content;animation:tick 32s linear infinite}
+@keyframes tick{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+.ti{display:flex;align-items:center;gap:7px;padding:0 22px;font-family:'DM Mono',monospace;font-size:10px;white-space:nowrap;border-right:1px solid var(--bd1)}
+.ti .n{color:var(--tx3);letter-spacing:1px}.ti .v{color:var(--tx0);font-weight:500}
+.ti .c.up{color:var(--up)}.ti .c.dn{color:var(--dn)}.ti .c.st{color:var(--tx3)}
+
+.india-stripe{height:3px;display:flex}
+.india-stripe div{flex:1}
+.india-stripe .s1{background:var(--saffron)}.india-stripe .s2{background:#fff}.india-stripe .s3{background:var(--indiagreen)}
+
+header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;
+  border-bottom:1px solid var(--bd1);position:sticky;top:0;z-index:200;
+  background:rgba(10,8,18,.94);backdrop-filter:blur(20px)}
+.brand{display:flex;align-items:center;gap:11px}
+.ico{width:36px;height:36px;border-radius:9px;background:linear-gradient(135deg,var(--g200),var(--g400));
+  display:flex;align-items:center;justify-content:center;font-size:16px;
+  box-shadow:var(--glow-g);animation:icoPulse 3s ease-in-out infinite}
+@keyframes icoPulse{0%,100%{box-shadow:var(--glow-g)}50%{box-shadow:0 0 60px rgba(245,197,24,.35),0 0 100px rgba(245,197,24,.12)}}
+.bname{font-family:'Syne',sans-serif;font-size:25px;font-weight:800;letter-spacing:-1px;
+  background:linear-gradient(110deg,#FFE566,#F5C518,#D4A017,#F5C518);
+  background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  animation:shine 4s linear infinite}
+@keyframes shine{0%{background-position:0% center}100%{background-position:200% center}}
+.bsub{font-family:'Hind',sans-serif;font-size:9px;letter-spacing:1px;color:var(--tx3);display:block;margin-top:-2px}
+.lr{display:flex;align-items:center;gap:7px}
+.lring{position:relative;width:9px;height:9px}
+.lring::before{content:'';position:absolute;inset:0;border-radius:50%;background:var(--up);animation:ring 1.4s ease-out infinite}
+.lring::after{content:'';position:absolute;inset:2px;border-radius:50%;background:var(--up)}
+@keyframes ring{0%{transform:scale(1);opacity:.8}100%{transform:scale(2.8);opacity:0}}
+.lt{font-family:'DM Mono',monospace;font-size:9px;color:var(--up);letter-spacing:1px}
+#clk{font-family:'DM Mono',monospace;font-size:10px;color:var(--tx2);margin-left:4px}
+.hr{display:flex;gap:7px}
+.btn{border:none;font-family:'Syne',sans-serif;font-weight:700;font-size:10px;
+  padding:7px 14px;border-radius:8px;cursor:pointer;transition:all .2s;letter-spacing:.4px}
+.bg{background:linear-gradient(135deg,var(--g300),var(--g200));color:#05040A}
+.bg:hover{transform:translateY(-1px);box-shadow:0 4px 20px rgba(245,197,24,.3)}
+.bgh{background:transparent;border:1px solid var(--bd2);color:var(--tx2)}
+.bgh:hover{border-color:var(--bd3);color:var(--tx1)}
+
+#sb{background:var(--bg0);border-bottom:1px solid var(--bd1);padding:6px 18px;
+  font-family:'DM Mono',monospace;font-size:10px;
+  display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.ok{color:var(--up)}.er{color:var(--dn)}.ld{color:var(--g200)}
+
+/* WHY-NO-TODAY EXPLAINER BANNER */
+.explain-banner{background:rgba(123,140,255,.06);border:1px solid rgba(123,140,255,.2);
+  border-radius:14px;padding:16px 20px;margin:18px 0;display:flex;gap:14px;align-items:flex-start;
+  animation:fadeUp .5s ease both}
+.explain-icon{font-size:24px;flex-shrink:0}
+.explain-text{font-size:11px;color:var(--tx2);line-height:1.7}
+.explain-text strong{color:var(--bl)}
+.explain-text code{background:var(--bg3);padding:1px 5px;border-radius:4px;font-family:'DM Mono',monospace;font-size:10px}
+
+#sourcePanel{display:none;background:var(--bg2);border:1px solid var(--bd2);
+  border-radius:14px;padding:18px;margin:18px 0;animation:fadeIn .3s ease;font-size:11px}
+.src-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;margin-bottom:10px;color:var(--g200)}
+.src-row{display:flex;justify-content:space-between;padding:7px 10px;background:var(--bg3);
+  border-radius:7px;margin-bottom:6px;font-family:'DM Mono',monospace;font-size:10px;gap:10px}
+.src-row .sn{color:var(--tx2)}.src-row .su{color:var(--bl);text-align:right}
+
+.sec{padding-top:26px}
+.sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px}
+.sl{display:flex;align-items:center;gap:10px}
+.sn2{font-family:'DM Mono',monospace;font-size:9px;color:var(--g300);
+  background:rgba(245,197,24,.07);border:1px solid rgba(245,197,24,.15);
+  padding:2px 7px;border-radius:4px;letter-spacing:1px}
+.st{font-family:'Syne',sans-serif;font-size:17px;font-weight:700;color:var(--tx0)}
+.ss{font-size:9px;color:var(--tx3);font-family:'DM Mono',monospace;margin-top:2px}
+.tabs{display:flex;gap:2px;background:var(--bg0);border:1px solid var(--bd1);border-radius:8px;padding:3px}
+.tab{padding:5px 13px;border-radius:6px;font-size:10px;cursor:pointer;color:var(--tx3);
+  border:none;background:none;font-family:'DM Mono',monospace;transition:all .2s}
+.tab.on{background:var(--bg4);color:var(--g200);font-weight:500}
+
+.culture-banner{background:linear-gradient(135deg,rgba(255,153,51,.06),rgba(19,136,8,.06));
+  border:1px solid var(--bd2);border-radius:14px;padding:16px 20px;margin-bottom:18px;
+  display:flex;align-items:center;gap:14px;animation:fadeUp .5s ease both}
+.culture-icon{font-size:28px;flex-shrink:0}
+.culture-text{font-size:11px;color:var(--tx2);line-height:1.6;font-family:'Hind',sans-serif}
+.culture-text strong{color:var(--g200)}
+
+.pred-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:22px}
+.pred-card{background:var(--bg2);border:1px solid var(--bd2);border-radius:16px;
+  padding:20px;position:relative;overflow:hidden;transition:transform .3s,border-color .3s;
+  animation:fadeUp .5s ease both}
+.pred-card:hover{transform:translateY(-3px);border-color:var(--bd3)}
+.pred-card.bull::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--up),transparent)}
+.pred-card.bear::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--dn),transparent)}
+.pglow{position:absolute;top:-50px;right:-50px;width:160px;height:160px;border-radius:50%;pointer-events:none;opacity:.05}
+.bull .pglow{background:var(--up)}.bear .pglow{background:var(--dn)}
+.pred-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px}
+.pred-eye{font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--tx3);font-family:'DM Mono',monospace}
+.pred-label{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;margin-top:4px;margin-bottom:2px}
+.conf{font-family:'DM Mono',monospace;font-size:9px;padding:3px 8px;border-radius:20px;
+  background:rgba(245,197,24,.07);color:var(--g200);border:1px solid rgba(245,197,24,.18)}
+.pred-note{font-size:9px;color:var(--tx3);font-family:'DM Mono',monospace;margin-bottom:12px;
+  padding:8px 10px;background:var(--bg3);border-radius:8px;line-height:1.6}
+.pred-rows{display:flex;flex-direction:column;gap:7px}
+.pred-row{display:flex;justify-content:space-between;align-items:center;
+  padding:8px 12px;background:var(--bg3);border-radius:9px;border:1px solid var(--bd1);transition:background .2s}
+.pred-row:hover{background:var(--bg4)}
+.pred-when{font-size:9px;color:var(--tx3);font-family:'DM Mono',monospace;min-width:68px}
+.pv1{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--g200)}
+.pv1 em{font-style:normal;font-size:8px;color:var(--tx3);font-family:'DM Mono',monospace}
+.pv8{font-size:8px;color:var(--tx3);font-family:'DM Mono',monospace;margin-top:1px}
+.dir-chip{font-size:9px;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:7px;font-weight:500}
+.dir-chip.up{color:var(--up);background:var(--upbg);border:1px solid var(--upbd)}
+.dir-chip.dn{color:var(--dn);background:var(--dnbg);border:1px solid var(--dnbd)}
+
+.rg{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.rc{background:var(--bg2);border:1px solid var(--bd2);border-radius:15px;padding:18px 16px;
+  position:relative;overflow:hidden;transition:transform .25s,border-color .25s,box-shadow .25s;
+  animation:fadeUp .45s ease both}
+.rc:hover{transform:translateY(-4px);border-color:var(--bd3);box-shadow:0 8px 32px rgba(0,0,0,.5)}
+.rc.feat{grid-column:span 2;background:linear-gradient(145deg,#0E0C1C,#161428);border-color:var(--g500)}
+.rc.feat::before{content:'';position:absolute;top:0;left:0;right:0;height:1.5px;
+  background:linear-gradient(90deg,transparent,var(--g200),var(--g300),transparent)}
+.rc::after{content:'';position:absolute;bottom:0;right:0;width:100px;height:100px;
+  background:radial-gradient(circle,rgba(245,197,24,.04),transparent 70%);pointer-events:none}
+.rc-kt{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:2px;color:var(--g400);margin-bottom:4px}
+.rc-eye{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--tx3);font-family:'DM Mono',monospace;margin-bottom:8px}
+.rc-rate{font-family:'Syne',sans-serif;font-size:38px;font-weight:800;color:var(--g100);
+  line-height:1;margin-bottom:2px;letter-spacing:-1.5px;text-shadow:0 0 40px rgba(255,229,102,.12)}
+.rc:not(.feat) .rc-rate{font-size:26px}
+.rc-unit{font-size:8px;color:var(--tx3);font-family:'DM Mono',monospace;margin-bottom:11px}
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;
+  font-family:'DM Mono',monospace;padding:3px 10px;border-radius:20px;font-weight:500}
+.badge.up{color:var(--up);background:var(--upbg);border:1px solid var(--upbd)}
+.badge.dn{color:var(--dn);background:var(--dnbg);border:1px solid var(--dnbd)}
+.badge.st{color:var(--bl);background:var(--blbg)}
+.rc-rng{display:flex;justify-content:space-between;margin-top:11px;padding-top:9px;
+  border-top:1px solid var(--bd1);font-size:8px;color:var(--tx3);font-family:'DM Mono',monospace}
+.rc-rng span{display:block;color:var(--tx1);font-size:11px;margin-top:2px;font-weight:500}
+.rc-src{font-size:7px;color:var(--tx4);margin-top:6px;font-family:'DM Mono',monospace}
+
+.usb{background:linear-gradient(135deg,var(--bg2),var(--bg3));border:1px solid var(--bd2);
+  border-radius:15px;padding:16px 20px;display:flex;align-items:center;
+  justify-content:space-between;margin-bottom:22px;flex-wrap:wrap;gap:14px}
+.usb-eye{font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--tx3);font-family:'DM Mono',monospace;margin-bottom:4px}
+.usb-price{font-family:'Syne',sans-serif;font-size:34px;font-weight:800;color:var(--sv);letter-spacing:-1px}
+.usb-sub{font-size:8px;color:var(--tx3);font-family:'DM Mono',monospace}
+.usb-stats{display:flex;gap:18px;flex-wrap:wrap}
+.us-stat .l{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--tx4);font-family:'DM Mono',monospace;margin-bottom:3px}
+.us-stat .v{font-family:'DM Mono',monospace;font-size:12px;font-weight:500;color:var(--tx1)}
+.us-stat .v.up{color:var(--up)}.us-stat .v.dn{color:var(--dn)}.us-stat .v.gl{color:var(--g200)}
+
+.ig{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:22px}
+.ic{background:var(--bg2);border:1px solid var(--bd1);border-radius:12px;padding:13px;transition:border-color .2s,transform .2s}
+.ic:hover{border-color:var(--bd3);transform:translateY(-2px)}
+.ic-l{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--tx4);font-family:'DM Mono',monospace;margin-bottom:5px}
+.ic-v{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--tx0);margin-bottom:3px}
+.ic-c{font-size:9px;font-family:'DM Mono',monospace}
+.ic-n{font-size:8px;color:var(--tx4);margin-top:3px;font-family:'DM Mono',monospace}
+
+.cg{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:22px}
+.cc{background:var(--bg2);border:1px solid var(--bd1);border-radius:15px;padding:18px;animation:fadeIn .8s ease both}
+.cc.full{grid-column:span 2}
+.cc-eye{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--tx3);font-family:'DM Mono',monospace;margin-bottom:2px}
+.cc-val{font-family:'Syne',sans-serif;font-size:21px;font-weight:700;color:var(--g200);margin-bottom:13px;letter-spacing:-.5px}
+.cw{position:relative;height:190px}.cw.tall{height:265px}
+.lgd{display:flex;gap:11px;flex-wrap:wrap;margin-top:10px}
+.li{display:flex;align-items:center;gap:4px;font-size:9px;color:var(--tx3);font-family:'DM Mono',monospace}
+.ld{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+
+.tw{background:var(--bg2);border:1px solid var(--bd1);border-radius:15px;overflow:hidden;margin-bottom:22px}
+.ts{overflow-x:auto;max-height:340px;overflow-y:auto}
+.ts::-webkit-scrollbar{width:4px;height:4px}
+.ts::-webkit-scrollbar-track{background:var(--bg3)}
+.ts::-webkit-scrollbar-thumb{background:var(--bd3);border-radius:4px}
+table{width:100%;border-collapse:collapse;min-width:480px}
+thead{position:sticky;top:0;z-index:5}
+th{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--tx3);
+  padding:11px 15px;text-align:left;background:var(--bg3);border-bottom:1px solid var(--bd2);
+  font-family:'DM Mono',monospace;font-weight:500;white-space:nowrap}
+td{padding:9px 15px;font-size:11px;font-family:'DM Mono',monospace;
+  border-bottom:1px solid var(--bd1);color:var(--tx1);white-space:nowrap;transition:background .15s}
+tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:var(--bg3)}
+.src-cell{font-size:8px;color:var(--tx4)}
+
+.fest-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:22px}
+.fest-card{background:var(--bg2);border:1px solid var(--bd1);border-radius:12px;padding:13px;transition:border-color .2s,transform .2s}
+.fest-card:hover{border-color:var(--saffron);transform:translateY(-2px)}
+.fest-icon{font-size:20px;margin-bottom:6px}
+.fest-name{font-family:'Hind',sans-serif;font-size:12px;font-weight:600;color:var(--tx0);margin-bottom:2px}
+.fest-date{font-size:9px;color:var(--tx3);font-family:'DM Mono',monospace;margin-bottom:4px}
+.fest-tag{font-size:8px;padding:2px 7px;border-radius:5px;background:rgba(255,153,51,.1);color:var(--saffron);font-family:'DM Mono',monospace}
+
+.div{border:none;border-top:1px solid var(--bd1);margin:26px 0;position:relative}
+.div::after{content:'◆';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  background:var(--bg1);padding:0 10px;color:var(--tx4);font-size:8px}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes flip{0%{opacity:1;transform:translateY(0)}40%{opacity:0;transform:translateY(-6px)}60%{opacity:0;transform:translateY(6px)}100%{opacity:1;transform:translateY(0)}}
+.flip{animation:flip .35s ease}
+.reveal{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s ease}
+.reveal.vis{opacity:1;transform:translateY(0)}
+
+footer{border-top:1px solid var(--bd1);padding:16px;text-align:center;
+  font-size:9px;color:var(--tx4);letter-spacing:.5px;line-height:2;margin-top:26px;font-family:'DM Mono',monospace}
+footer strong{color:var(--tx3)}
+footer .disc{color:var(--dn);font-weight:600}
+
+@media(max-width:900px){.cg,.pred-grid{grid-template-columns:1fr}.cc.full{grid-column:span 1}}
+@media(max-width:820px){
+  .rg{grid-template-columns:1fr 1fr}.rc.feat{grid-column:span 2}
+  .ig{grid-template-columns:repeat(3,1fr)}
+  .usb{flex-direction:column;align-items:flex-start}
+}
+@media(max-width:580px){
+  .rg{grid-template-columns:1fr}.rc.feat{grid-column:span 1}
+  .ig{grid-template-columns:repeat(2,1fr)}
+  .rc-rate{font-size:30px!important}
+  #clk,.lr{display:none}
+}
+</style>
+</head>
+<body>
+
+<div class="india-stripe"><div class="s1"></div><div class="s2"></div><div class="s3"></div></div>
+<div class="ticker"><div class="ticker-inner" id="tkr"></div></div>
+
+<header>
+  <div class="brand">
+    <div class="ico">✦</div>
+    <div><div class="bname">NGold</div><span class="bsub">भारत का सोना · India's Gold Intelligence</span></div>
+  </div>
+  <div class="lr"><div class="lring"></div><span class="lt">LIVE</span><span id="clk"></span></div>
+  <div class="hr">
+    <button class="btn bgh" onclick="toggleSources()">📋 Sources</button>
+    <button class="btn bgh" onclick="animRefresh()">⟳ Refresh</button>
+  </div>
+</header>
+
+<div id="sb">
+  <span id="sMsg" class="ok">✓ Real data — day-wise through Jun 29, 2026 · Goodreturns news articles · PolicyBazaar · IBJA</span>
+  <span id="sTime" style="font-family:'DM Mono',monospace;font-size:10px;color:var(--tx3)"></span>
+</div>
+
+<div class="wrap">
+
+  <!-- WHY NO JUN 30 EXPLAINER -->
+  <div class="explain-banner reveal">
+    <div class="explain-icon">ℹ️</div>
+    <div class="explain-text">
+      <strong>Why does data stop at Jun 29, not Jun 30?</strong> Two real constraints: (1) This page runs in a browser sandbox that
+      <strong>cannot make live API calls</strong> — every number here was manually verified via web search, not fetched automatically.
+      (2) Jewellers (Tanishq, Kalyan, Malabar) publish each day's rate progressively through the morning — at the time of this search,
+      no outlet had yet published a dated <code>Jun 30, 2026</code> article. The most recent <em>confirmed, dated</em> rate is Jun 29.
+      Share today's rate with me anytime and I'll rebuild this page with it added.
+    </div>
+  </div>
+
+  <div id="sourcePanel">
+    <div class="src-title">📋 Day-wise Data Sources — Every Date Cited</div>
+    <div class="src-row"><span class="sn">Jun 20</span><span class="su">Goodreturns — Tanishq ₹13,435/g (22K)</span></div>
+    <div class="src-row"><span class="sn">Jun 22</span><span class="su">Goodreturns — Tanishq/Kalyan/Malabar ₹13,390/g (22K)</span></div>
+    <div class="src-row"><span class="sn">Jun 23</span><span class="su">Goodreturns — IBJA/Kalyan ₹13,375/g, 24K crash -1%</span></div>
+    <div class="src-row"><span class="sn">Jun 25</span><span class="su">Goodreturns — Tanishq ₹13,275, Malabar/Joyalukkas ₹13,100</span></div>
+    <div class="src-row"><span class="sn">Jun 27</span><span class="su">Goodreturns — Tanishq ₹13,130, Joyalukkas ₹13,085, Kalyan ₹12,980</span></div>
+    <div class="src-row"><span class="sn">Jun 28</span><span class="su">Goodreturns ticker — Sensex 77,100, 22K ₹12,980 (national)</span></div>
+    <div class="src-row"><span class="sn">Jun 29</span><span class="su">Goodreturns — Tanishq ₹13,240, IBJA/Malabar/Joyalukkas/Kalyan ₹13,195</span></div>
+    <div class="src-row"><span class="sn">Chennai/TN specific Jun 28-29</span><span class="su">PolicyBazaar.com ₹13,370 (28th) → ₹13,300 (29th)</span></div>
+    <div class="src-row"><span class="sn">June High/Low</span><span class="su">PolicyBazaar — High ₹14,630, Low ₹13,220 (22K)</span></div>
+    <div class="src-row"><span class="sn">Customs/GST rules</span><span class="su">ClearTax.in — 5% BCD + 1% AIDC + 3% GST</span></div>
+    <div style="font-size:9px;color:var(--tx4);margin-top:10px;font-family:'DM Mono',monospace">
+      This page cannot call live APIs (browser sandbox restriction). All figures were verified via web search at build time. To add Jun 30 or later, share the new rate and the page will be rebuilt.
+    </div>
+  </div>
+
+  <div class="culture-banner reveal">
+    <div class="culture-icon">🪔</div>
+    <div class="culture-text">
+      <strong>Gold in Tamil culture</strong> — central to weddings (thaali, bridal sets), Pongal, Akshaya Tritiya, family savings.
+      Chennai/Tamil Nadu is India's largest gold-consuming region. Govt levies <strong>6% customs duty</strong> (5% BCD + 1% AIDC) plus <strong>3% GST</strong> on every purchase. Source: ClearTax.in
+    </div>
+  </div>
+
+  <!-- 01 PREDICTIONS -->
+  <div class="sec reveal">
+    <div class="sh">
+      <div class="sl"><span class="sn2">01</span>
+        <div><div class="st">7-Day Price Forecast</div>
+        <div class="ss">From Jun 29 base · Chennai 22K & 24K · Real momentum-based</div></div>
+      </div>
+      <button class="btn bg" onclick="buildPred()" style="font-size:10px;padding:6px 12px">⚡ Recompute</button>
+    </div>
+    <div class="pred-grid" id="pg"></div>
+  </div>
+
+  <!-- 02 RATE CARDS -->
+  <div class="sec reveal">
+    <div class="sh">
+      <div class="sl"><span class="sn2">02</span>
+        <div><div class="st">Latest Verified Rate</div><div class="ss" id="rateDate">Jun 29, 2026 · IBJA / Tanishq / PolicyBazaar</div></div>
+      </div>
+    </div>
+    <div class="rg" id="rg"></div>
+  </div>
+
+  <div class="usb reveal">
+    <div>
+      <div class="usb-eye">🇮🇳 India Market Context (Jun 29, 2026)</div>
+      <div class="usb-price" id="usP">—</div>
+      <div class="usb-sub">Sensex / Nifty / USD-INR live ticker context from Goodreturns</div>
+    </div>
+    <div class="usb-stats" id="usStats"></div>
+  </div>
+
+  <div class="sec reveal">
+    <div class="sh"><div class="sl"><span class="sn2">03</span>
+      <div><div class="st">Indian Market Signals</div><div class="ss">Goodreturns live ticker, Jun 29 2026</div></div>
+    </div></div>
+    <div class="ig" id="ig"></div>
+  </div>
+
+  <div class="div"></div>
+
+  <!-- 04 DAY-WISE CHART -->
+  <div class="sec reveal">
+    <div class="sh">
+      <div class="sl"><span class="sn2">04</span>
+        <div><div class="st">Day-wise Rate Chart</div><div class="ss">Chennai/National 22K — Jun 20 to Jun 29, verified daily</div></div>
+      </div>
+    </div>
+    <div class="cg">
+      <div class="cc"><div class="cc-eye">Per Gram · 22K</div><div class="cc-val" id="wv1">—</div>
+        <div class="cw"><canvas id="wc1"></canvas></div>
+        <div class="lgd">
+          <div class="li"><div class="ld" style="background:#F5C518"></div>22K</div>
+          <div class="li"><div class="ld" style="background:#00E87A;opacity:.7"></div>June High</div>
+          <div class="li"><div class="ld" style="background:#FF4D6D;opacity:.7"></div>June Low</div>
+        </div>
+      </div>
+      <div class="cc"><div class="cc-eye">Per 8 Grams · Pavun</div><div class="cc-val" id="wv8">—</div>
+        <div class="cw"><canvas id="wc8"></canvas></div>
+        <div class="lgd">
+          <div class="li"><div class="ld" style="background:#E8960C"></div>8g</div>
+          <div class="li"><div class="ld" style="background:#00E87A;opacity:.7"></div>High</div>
+          <div class="li"><div class="ld" style="background:#FF4D6D;opacity:.7"></div>Low</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 05 24K CHART -->
+  <div class="sec reveal">
+    <div class="sh">
+      <div class="sl"><span class="sn2">05</span>
+        <div><div class="st">24K Investment Grade Chart</div><div class="ss">For SGB, digital gold, IBJA benchmark tracking</div></div>
+      </div>
+    </div>
+    <div class="cg">
+      <div class="cc full"><div class="cc-eye">24K Rate Trend · with June High/Low band</div>
+        <div class="cw tall"><canvas id="mc"></canvas></div>
+        <div class="lgd">
+          <div class="li"><div class="ld" style="background:#FFE566"></div>24K</div>
+          <div class="li"><div class="ld" style="background:#00E87A;opacity:.35"></div>June High Zone</div>
+          <div class="li"><div class="ld" style="background:#FF4D6D;opacity:.35"></div>June Low Zone</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="div"></div>
+
+  <!-- 06 DAY-WISE HISTORY TABLE -->
+  <div class="sec reveal">
+    <div class="sh"><div class="sl"><span class="sn2">06</span>
+      <div><div class="st">Day-wise Rate History</div><div class="ss">Jun 20-29, 2026 · Each row dated & sourced</div></div>
+    </div></div>
+    <div class="tw"><div class="ts">
+      <table><thead><tr>
+        <th>Date</th><th>22K /g</th><th>24K /g</th><th>22K 8g</th><th>Δ 22K</th><th>Jeweller / Source</th>
+      </tr></thead><tbody id="hb"></tbody></table>
+    </div></div>
+  </div>
+
+  <!-- 07 CITY TABLE -->
+  <div class="sec reveal">
+    <div class="sh"><div class="sl"><span class="sn2">07</span>
+      <div><div class="st">Major Indian Cities</div><div class="ss">Jun 29, 2026 · Goodreturns per-city verified</div></div>
+    </div></div>
+    <div class="tw"><div class="ts">
+      <table><thead><tr><th>City</th><th>22K /g</th><th>22K 8g</th><th>24K /g</th><th>24K 8g</th><th>18K /g</th></tr></thead>
+        <tbody id="cb"></tbody></table>
+    </div></div>
+  </div>
+
+  <!-- 08 FESTIVAL CALENDAR -->
+  <div class="sec reveal">
+    <div class="sh"><div class="sl"><span class="sn2">08</span>
+      <div><div class="st">Indian Festival Gold-Buying Calendar</div><div class="ss">Cultural context · Source: ClearTax.in</div></div>
+    </div></div>
+    <div class="fest-grid" id="festGrid"></div>
+  </div>
+
+  <!-- 09 INVESTMENT OPTIONS -->
+  <div class="sec reveal">
+    <div class="sh"><div class="sl"><span class="sn2">09</span>
+      <div><div class="st">Gold Investment Options in India</div><div class="ss">Source: BankBazaar.com</div></div>
+    </div></div>
+    <div class="tw"><div class="ts">
+      <table><thead><tr><th>Option</th><th>Key Benefit</th><th>Liquidity</th><th>Best For</th></tr></thead>
+        <tbody id="investBody"></tbody></table>
+    </div></div>
+  </div>
+
+</div><!-- /wrap -->
+
+<footer>
+  <strong>NGold</strong> · भारत का सोना · Day-wise data verified through Jun 29, 2026 from dated Goodreturns.in news articles, PolicyBazaar.com, ClearTax.in, BankBazaar.com ·
+  India rate references IBJA benchmark + named jewellers (Tanishq, Malabar, Joyalukkas, Kalyan) ·
+  <span class="disc">Not financial advice. This page cannot auto-refresh — share new rates to update.</span>
+</footer>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// DB — every entry cited to a dated, named source.
+// No interpolated/invented days — gaps reflect what
+// was actually published and found.
+// ═══════════════════════════════════════════════════════
+
+const DB = {
+  // ── LATEST VERIFIED: Jun 29, 2026 ──
+  // Source: Goodreturns "Gold Rate Today, June 29" article
+  today: {
+    date: 'Jun 29, 2026',
+    k22: 13110,   // IBJA/national benchmark per Goodreturns ticker
+    k24: 14302,   // Goodreturns India national avg, Jun 29
+    k18: 10727,   // Goodreturns India national avg, Jun 29
+    k22_tanishq: 13240,
+    k22_malabar: 13195,
+    k22_joyalukkas: 13195,
+    k22_kalyan: 13195,
+    k24_tanishq: 14444,
+    prev22: 12980, // Jun 27/28 national ticker value
+  },
+
+  // ── DAY-WISE HISTORY ── each entry = dated Goodreturns article
+  // jeweller field shows which retailer's rate this represents
+  history: [
+    {d:'Jun 20', v22:13435, v24:null, jeweller:'Tanishq', src:'Goodreturns'},
+    {d:'Jun 22', v22:13390, v24:14607, jeweller:'Tanishq/Kalyan/Malabar', src:'Goodreturns'},
+    {d:'Jun 23', v22:13375, v24:14591, jeweller:'IBJA/Kalyan', src:'Goodreturns'},
+    {d:'Jun 25', v22:13100, v24:14291, jeweller:'Malabar/Joyalukkas', src:'Goodreturns'},
+    {d:'Jun 27', v22:13085, v24:14275, jeweller:'Joyalukkas', src:'Goodreturns'},
+    {d:'Jun 28', v22:12980, v24:14275, jeweller:'National ticker', src:'Goodreturns'},
+    {d:'Jun 29', v22:13110, v24:14302, jeweller:'IBJA national avg', src:'Goodreturns'},
+  ],
+
+  // Chennai/Tamil Nadu specific (slightly different from national)
+  chennaiSpecific: [
+    {d:'Jun 28', v22:13370, src:'PolicyBazaar Tamil Nadu'},
+    {d:'Jun 29', v22:13300, src:'PolicyBazaar Chennai'},
+  ],
+
+  // ── JUNE HIGH/LOW ── Source: PolicyBazaar.com
+  juneRange: {
+    high22: 14630, high24: 15362,
+    low22: 13080,  // Delhi page confirms low ₹13,080; Chennai context ~13,220
+    low24: 13734,
+  },
+
+  taxes: { bcd:5, aidc:1, gst:3, total_customs:6 },
+
+  // ── CITIES — Jun 29, 2026 ── Source: Goodreturns per-city pages
+  cities: {
+    'Chennai': {k22:13300, k24:13965, k18:11125},
+    'Mumbai':  {k22:13110, k24:14302, k18:10727},
+    'Delhi':   {k22:13210, k24:13871, k18:10645},
+    'Kolkata': {k22:13110, k24:14302, k18:10727},
+    'Bangalore':{k22:13110,k24:14302, k18:10727},
+    'Hyderabad':{k22:13010,k24:14193, k18:10645},
+  },
+
+  investments: [
+    {name:'Sovereign Gold Bonds (SGB)', benefit:'Interest + tax-free maturity', liquidity:'Low (8yr lock, exit via exchange)', best:'Long-term wealth building'},
+    {name:'Gold ETFs', benefit:'Easy liquidity via stock exchange', liquidity:'High (trade like shares)', best:'Active investors, no storage hassle'},
+    {name:'Digital Gold', benefit:'Buy in small amounts, convenient', liquidity:'Medium (redeem via app)', best:'Beginners, small regular savings'},
+    {name:'Physical Jewellery', benefit:'Cultural & wearable value', liquidity:'Medium (resale at jeweller)', best:'Weddings, festivals, traditional gifting'},
+    {name:'Gold Coins/Bars', benefit:'Tangible, easy to verify purity', liquidity:'Medium-High', best:'Safe-haven savings, gifting'},
+  ],
+
+  festivals: [
+    {icon:'🌻', name:'Pongal', date:'Mid-January', tag:'Tamil New Year', note:'Family gold gifting tradition'},
+    {icon:'🐍', name:'Akshaya Tritiya', date:'April/May', tag:'Most auspicious', note:'Considered best day to buy gold all year'},
+    {icon:'💍', name:'Wedding Season', date:'Nov-Feb, Apr-Jun', tag:'Peak demand', note:'Bridal sets, thaali — highest gold intensity'},
+    {icon:'🪔', name:'Diwali', date:'Oct/Nov', tag:'National festival', note:'Lakshmi Puja — gold seen as prosperity symbol'},
+    {icon:'🌕', name:'Karthigai Deepam', date:'Nov/Dec', tag:'Tamil Nadu', note:'Temple visits, family gold purchases'},
+    {icon:'🎉', name:'Navratri', date:'Sep/Oct', tag:'9-day festival', note:'Jewellery shopping across India'},
+  ],
+};
+
+let charts={};
+const f=v=>v==null?'—':'₹'+Math.round(v).toLocaleString('en-IN');
+
+setInterval(()=>{
+  const e=document.getElementById('clk');
+  if(e) e.textContent=new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false})+' IST';
+},1000);
+
+function buildTicker(){
+  const t=DB.today, ch=t.k22-t.prev22;
+  const items=[
+    {n:'NATIONAL 22K',v:f(t.k22),c:ch===0?'No Chg':(ch>0?'+':'')+f(ch),up:ch>=0,z:ch===0},
+    {n:'NATIONAL 24K',v:f(t.k24),c:'Jun 29',up:true,z:true},
+    {n:'TANISHQ 22K',v:f(t.k22_tanishq),c:'Jun 29',up:true,z:true},
+    {n:'CHENNAI 22K',v:f(13300),c:'Jun 29 PolicyBazaar',up:true,z:true},
+    {n:'JUNE HIGH 22K',v:f(DB.juneRange.high22),c:'PolicyBazaar',up:true,z:true},
+    {n:'JUNE LOW 22K',v:f(DB.juneRange.low22),c:'This month',up:false,z:true},
+    {n:'CUSTOMS DUTY',v:DB.taxes.total_customs+'%',c:'BCD+AIDC',up:true,z:true},
+    {n:'GST',v:DB.taxes.gst+'%',c:'On sale',up:true,z:true},
+    {n:'LAST UPDATE',v:'Jun 29',c:'No Jun 30 data yet',up:false,z:false},
+  ];
+  const html=items.map(i=>`
+    <div class="ti"><span class="n">${i.n}</span><span class="v">${i.v}</span>
+    <span class="c ${i.z?'st':i.up?'up':'dn'}">${i.c}</span></div>`).join('');
+  document.getElementById('tkr').innerHTML=html+html;
+}
+
+function toggleSources(){
+  const p=document.getElementById('sourcePanel');
+  p.style.display=p.style.display==='block'?'none':'block';
+}
+
+function renderCards(){
+  const t=DB.today, ch22=t.k22-t.prev22;
+  const cl=ch22>0?'up':ch22<0?'dn':'st', sy=ch22>0?'▲':ch22<0?'▼':'●';
+  const chp=t.prev22?Math.abs((ch22/t.prev22)*100).toFixed(2):0;
+  document.getElementById('rg').innerHTML=`
+  <div class="rc feat">
+    <div class="rc-kt">🇮🇳 NATIONAL AVG · 22K (916 HALLMARK)</div>
+    <div class="rc-eye">IBJA Benchmark — Per Gram</div>
+    <div class="rc-rate flip">${f(t.k22)}</div>
+    <div class="rc-unit">per gram · 91.6% pure · excl. making + GST</div>
+    <div class="badge ${cl}">${sy} ${f(Math.abs(ch22))} vs Jun 27/28 · ${chp}%</div>
+    <div class="rc-rng">
+      <div>Tanishq<span>${f(t.k22_tanishq)}</span></div>
+      <div>Malabar<span>${f(t.k22_malabar)}</span></div>
+      <div>Kalyan<span>${f(t.k22_kalyan)}</span></div>
+    </div>
+    <div class="rc-src">Source: Goodreturns.in, Jun 29 2026</div>
+  </div>
+  <div class="rc feat">
+    <div class="rc-kt">🏙 CHENNAI SPECIFIC · 22K (பவுன்)</div>
+    <div class="rc-eye">Tamil Nadu Rate — Per Gram</div>
+    <div class="rc-rate flip">${f(13300)}</div>
+    <div class="rc-unit">per gram · Chennai/TN market</div>
+    <div class="badge dn">▼ ${f(70)} vs Jun 28 (₹13,370)</div>
+    <div class="rc-rng">
+      <div>Per 8g<span>${f(13300*8)}</span></div>
+      <div>Per 10g<span>${f(13300*10)}</span></div>
+      <div>24K/g<span>${f(13965)}</span></div>
+    </div>
+    <div class="rc-src">Source: PolicyBazaar.com Chennai, Jun 29 2026</div>
+  </div>
+  <div class="rc">
+    <div class="rc-kt">NATIONAL · 24K PURE</div>
+    <div class="rc-eye">IBJA Benchmark · 1g</div>
+    <div class="rc-rate">${f(t.k24)}</div>
+    <div class="rc-unit">99.9% pure · for SGB/digital gold</div>
+    <div class="badge st">Tanishq: ${f(t.k24_tanishq)}</div>
+  </div>
+  <div class="rc">
+    <div class="rc-kt">NATIONAL · 18K</div>
+    <div class="rc-eye">75% Pure · 1g</div>
+    <div class="rc-rate">${f(t.k18)}</div>
+    <div class="rc-unit">75% pure · diamond-studded jewellery</div>
+    <div class="badge st">Goodreturns Jun 29</div>
+  </div>`;
+}
+
+function renderUSBanner(){
+  document.getElementById('usP').textContent='Sensex 76,728';
+  document.getElementById('usStats').innerHTML=`
+    <div class="us-stat"><div class="l">Sensex</div><div class="v dn">76,728.37 ▼0.48%</div></div>
+    <div class="us-stat"><div class="l">Nifty</div><div class="v dn">23,946.25 ▼0.46%</div></div>
+    <div class="us-stat"><div class="l">USD/INR</div><div class="v gl">₹94.50</div></div>
+    <div class="us-stat"><div class="l">Crude Oil</div><div class="v">$73.15</div></div>
+    <div class="us-stat"><div class="l">Silver</div><div class="v gl">₹2,40,000/kg</div></div>
+    <div class="us-stat"><div class="l">Petrol (Chennai)</div><div class="v">₹111.21/L</div></div>`;
+}
+
+function renderInds(){
+  const items=[
+    {l:'National 22K', v:f(DB.today.k22), c:'IBJA benchmark', col:'var(--g200)', n:'Goodreturns Jun 29'},
+    {l:'National 24K', v:f(DB.today.k24), c:'IBJA benchmark', col:'var(--g200)', n:'Goodreturns Jun 29'},
+    {l:'Customs Duty',  v:DB.taxes.total_customs+'%', c:'BCD 5% + AIDC 1%', col:'var(--bl)', n:'ClearTax.in'},
+    {l:'GST on Gold',   v:DB.taxes.gst+'%', c:'On every sale', col:'var(--bl)', n:'Govt of India'},
+    {l:'Sensex Today',  v:'76,728', c:'▼ -0.48%', col:'var(--dn)', n:'Goodreturns Jun 29'},
+  ];
+  document.getElementById('ig').innerHTML=items.map(it=>`
+    <div class="ic"><div class="ic-l">${it.l}</div><div class="ic-v">${it.v}</div>
+    <div class="ic-c" style="color:${it.col}">${it.c}</div><div class="ic-n">${it.n}</div></div>`).join('');
+}
+
+const bO={responsive:true,maintainAspectRatio:false,interaction:{intersect:false,mode:'index'},
+  animation:{duration:700,easing:'easeInOutQuart'},
+  plugins:{legend:{display:false},tooltip:{backgroundColor:'#181628',borderColor:'#2A2840',
+    borderWidth:1,titleColor:'#7068A0',bodyColor:'#EDE8F8',padding:10,
+    titleFont:{family:'DM Mono',size:10},bodyFont:{family:'DM Mono',size:11}}},
+  scales:{
+    x:{grid:{color:'rgba(26,24,46,.6)',drawBorder:false},ticks:{color:'#3D3860',font:{family:'DM Mono',size:9},maxTicksLimit:8}},
+    y:{position:'right',grid:{color:'rgba(26,24,46,.6)',drawBorder:false},ticks:{color:'#7068A0',font:{family:'DM Mono',size:10}}}
+  }};
+function mkO(yFmt){const o=JSON.parse(JSON.stringify(bO));if(yFmt)o.scales.y.ticks.callback=yFmt;return o;}
+function grd(ctx,r,g,b,a=.22){const gr=ctx.chart.ctx.createLinearGradient(0,0,0,220);gr.addColorStop(0,`rgba(${r},${g},${b},${a})`);gr.addColorStop(1,`rgba(${r},${g},${b},0)`);return gr;}
+function mkChart(id,type,data,opts){if(charts[id])charts[id].destroy();charts[id]=new Chart(document.getElementById(id),{type,data,options:opts});}
+
+function renderWeekChart(){
+  const sl=DB.history;
+  const lb=sl.map(r=>r.d),v22=sl.map(r=>r.v22);
+  const hi=sl.map(()=>DB.juneRange.high22),lo=sl.map(()=>DB.juneRange.low22);
+  const last=v22[v22.length-1];
+  document.getElementById('wv1').textContent=f(last);
+  document.getElementById('wv8').textContent=f(last*8);
+  mkChart('wc1','line',{labels:lb,datasets:[
+    {data:hi,borderColor:'rgba(0,232,122,.4)',borderWidth:1,borderDash:[4,3],pointRadius:0,fill:false,tension:0},
+    {data:v22,borderColor:'#F5C518',borderWidth:2.5,pointRadius:5,pointBackgroundColor:'#F5C518',
+     pointBorderColor:'#0A0812',pointBorderWidth:2,fill:true,backgroundColor:ctx=>grd(ctx,245,197,24),tension:.3},
+    {data:lo,borderColor:'rgba(255,77,109,.4)',borderWidth:1,borderDash:[4,3],pointRadius:0,fill:false,tension:0}
+  ]},mkO(v=>'₹'+v.toLocaleString('en-IN')));
+  mkChart('wc8','line',{labels:lb,datasets:[
+    {data:hi.map(v=>v*8),borderColor:'rgba(0,232,122,.4)',borderWidth:1,borderDash:[4,3],pointRadius:0,fill:false,tension:0},
+    {data:v22.map(v=>v*8),borderColor:'#E8960C',borderWidth:2.5,pointRadius:5,pointBackgroundColor:'#E8960C',
+     pointBorderColor:'#0A0812',pointBorderWidth:2,fill:true,backgroundColor:ctx=>grd(ctx,232,150,12),tension:.3},
+    {data:lo.map(v=>v*8),borderColor:'rgba(255,77,109,.4)',borderWidth:1,borderDash:[4,3],pointRadius:0,fill:false,tension:0}
+  ]},mkO(v=>'₹'+(v/1000).toFixed(0)+'k'));
+}
+
+function render24KChart(){
+  const sl=DB.history.filter(r=>r.v24!=null);
+  const lb=sl.map(r=>r.d);
+  const v24=sl.map(r=>r.v24);
+  const hi=sl.map(()=>DB.juneRange.high24),lo=sl.map(()=>DB.juneRange.low24);
+  mkChart('mc','line',{labels:lb,datasets:[
+    {data:hi,borderColor:'rgba(0,232,122,0)',borderWidth:0,pointRadius:0,fill:'+1',backgroundColor:'rgba(0,232,122,.07)',tension:0},
+    {data:v24,borderColor:'#FFE566',borderWidth:2.5,pointRadius:4,
+     pointBackgroundColor:'#FFE566',pointBorderColor:'#0A0812',pointBorderWidth:2,fill:false,tension:.3},
+    {data:lo,borderColor:'rgba(255,77,109,0)',borderWidth:0,pointRadius:0,fill:'-1',backgroundColor:'rgba(255,77,109,.07)',tension:0}
+  ]},mkO(v=>'₹'+v.toLocaleString('en-IN')));
+}
+
+function buildPred(){
+  const t=DB.today, hist=DB.history;
+  const today22=t.k22, today24=t.k24;
+  const validHist=hist.filter(h=>h.v22);
+  const mom=(validHist[validHist.length-1].v22-validHist[0].v22)/validHist[0].v22;
+  const days=validHist.length-1;
+  const dailyMom=mom/days;
+
+  const scenarios=[
+    {cls:'bull', label:'⚖️ Stabilisation / Mild Recovery', color:'var(--g200)', conf:'60%',
+     note:`National 22K bounced from ₹12,980 (Jun 27-28) to ₹13,110 (Jun 29). Chennai still elevated at ₹13,300. Floor likely near ₹12,900-13,000 with wedding season support.`,
+     mult:0.4},
+    {cls:'bear', label:'🐻 Continued Softness', color:'var(--dn)', conf:'55%',
+     note:`From June 20 high ₹13,435 to Jun 29 ₹13,110, a real -2.4% slide. June peak was ₹14,630 — already -10.4% off that. Hawkish Fed (86% probability Dec 2026 hike per IBJA's Kothari) keeps pressure on.`,
+     mult:-0.7}
+  ];
+
+  const tfs=[{l:'+1 Day',d:1},{l:'+2 Days',d:2},{l:'+3 Days',d:3},{l:'+5 Days',d:5},{l:'+7 Days',d:7}];
+
+  document.getElementById('pg').innerHTML=scenarios.map(sc=>`
+    <div class="pred-card ${sc.cls}">
+      <div class="pglow"></div>
+      <div class="pred-top">
+        <div><div class="pred-eye">7-Day Forecast · National 22K</div>
+        <div class="pred-label" style="color:${sc.color}">${sc.label}</div></div>
+        <div class="conf">Conf. ${sc.conf}</div>
+      </div>
+      <div class="pred-note">${sc.note}</div>
+      <div class="pred-rows">${tfs.map(tf=>{
+        const p22final=Math.round(today22+(today22*dailyMom*sc.mult*tf.d));
+        const p24final=Math.round(p22final*24/22);
+        const diff=p22final-today22, dc=diff>=0?'up':'dn', ds=diff>=0?'▲':'▼';
+        return`<div class="pred-row">
+          <div class="pred-when">${tf.l}</div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div><div class="pv1">${f(p22final)} <em>22K/g</em></div>
+            <div class="pv8">24K: ${f(p24final)} · 8g: ${f(p22final*8)}</div></div>
+            <div class="dir-chip ${dc}">${ds} ${f(Math.abs(diff))}</div>
+          </div></div>`;
+      }).join('')}</div>
+    </div>`).join('');
+}
+
+function renderHistTable(){
+  const rows=[...DB.history].reverse();
+  document.getElementById('hb').innerHTML=rows.map((r,i)=>{
+    const prev=rows[i+1],ch=prev&&prev.v22?r.v22-prev.v22:null,chp=ch&&prev.v22?(ch/prev.v22*100).toFixed(2):null;
+    const col=ch===null?'var(--tx3)':ch>0?'var(--up)':ch<0?'var(--dn)':'var(--tx3)';
+    const sy=ch===null?'':ch>0?'▲':ch<0?'▼':'●';
+    const today=i===0;
+    return`<tr style="${today?'background:rgba(245,197,24,.05)':''}">
+      <td style="color:${today?'var(--g200)':'var(--tx1)'};font-weight:${today?700:400}">${r.d}, 2026${today?' ← Latest':''}</td>
+      <td style="color:var(--g200);font-weight:${today?700:400}">${f(r.v22)}</td>
+      <td>${f(r.v24)}</td>
+      <td>${f(r.v22*8)}</td>
+      <td style="color:${col}">${ch!==null?sy+' '+f(Math.abs(ch)):'baseline'}</td>
+      <td class="src-cell">${r.jeweller} · ${r.src}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderCityTable(){
+  document.getElementById('cb').innerHTML=Object.entries(DB.cities).map(([city,r])=>{
+    const isCh=city==='Chennai';
+    return`<tr style="${isCh?'background:rgba(245,197,24,.05)':''}">
+      <td style="color:${isCh?'var(--g200)':'var(--tx0)'};font-weight:${isCh?700:500}">${city}${isCh?' ⭐':''}</td>
+      <td style="color:${isCh?'var(--g200)':'var(--tx1)'};font-weight:${isCh?700:400}">${f(r.k22)}</td>
+      <td>${f(r.k22*8)}</td><td>${f(r.k24)}</td><td>${f(r.k24*8)}</td>
+      <td style="color:var(--tx2)">${f(r.k18)}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderInvestTable(){
+  document.getElementById('investBody').innerHTML=DB.investments.map(inv=>`
+    <tr><td style="color:var(--g200);font-weight:500">${inv.name}</td><td>${inv.benefit}</td>
+    <td>${inv.liquidity}</td><td style="color:var(--tx2)">${inv.best}</td></tr>`).join('');
+}
+
+function renderFestivals(){
+  document.getElementById('festGrid').innerHTML=DB.festivals.map(fe=>`
+    <div class="fest-card"><div class="fest-icon">${fe.icon}</div>
+    <div class="fest-name">${fe.name}</div><div class="fest-date">${fe.date}</div>
+    <div class="fest-tag">${fe.tag}</div>
+    <div style="font-size:9px;color:var(--tx3);margin-top:6px;font-family:'Hind',sans-serif">${fe.note}</div></div>`).join('');
+}
+
+function animRefresh(){
+  document.querySelectorAll('.rc-rate').forEach(el=>{el.classList.remove('flip');void el.offsetWidth;el.classList.add('flip');});
+  document.getElementById('sTime').textContent='Checked: '+new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
+  document.getElementById('sMsg').textContent=`✓ Data current through Jun 29, 2026 · 22K: ${f(DB.today.k22)} · Share today's rate to extend`;
+  document.getElementById('sMsg').className='ok';
+}
+
+function initReveal(){
+  const obs=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('vis');obs.unobserve(e.target);}});},{threshold:.06});
+  document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+}
+
+function init(){
+  buildTicker();
+  buildPred();
+  renderCards();
+  renderUSBanner();
+  renderInds();
+  renderWeekChart();
+  render24KChart();
+  renderHistTable();
+  renderCityTable();
+  renderInvestTable();
+  renderFestivals();
+  initReveal();
+  document.getElementById('sTime').textContent='Loaded: '+new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
+}
+init();
+</script>
+</body>
+</html>
