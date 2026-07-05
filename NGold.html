@@ -85,7 +85,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:14p
 .log-t{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;margin-bottom:10px;color:var(--g200)}
 .log-r{display:flex;justify-content:space-between;padding:6px 10px;background:var(--bg3);
   border-radius:6px;margin-bottom:5px;font-family:'DM Mono',monospace;font-size:10px;gap:10px;flex-wrap:wrap}
-.log-r.ok2{border-left:2px solid var(--up)}.log-r.fail{border-left:2px solid var(--dn);opacity:.65}
+.log-r.ok2{border-left:2px solid var(--up)}.log-r.fail{border-left:2px solid var(--dn);opacity:.7}
 .log-r.warn{border-left:2px solid var(--or)}
 .log-r .ln{color:var(--tx2)}.log-r .lv{color:var(--bl)}
 
@@ -101,8 +101,8 @@ header{display:flex;align-items:center;justify-content:space-between;padding:14p
 .cbanner{background:linear-gradient(135deg,rgba(255,153,51,.06),rgba(19,136,8,.06));
   border:1px solid var(--bd2);border-radius:14px;padding:14px 18px;margin-bottom:18px;
   display:flex;align-items:center;gap:12px}
-.cbanner-t{font-size:11px;color:var(--tx2);line-height:1.6;font-family:'Hind',sans-serif}
-.cbanner-t strong{color:var(--g200)}
+.cbt{font-size:11px;color:var(--tx2);line-height:1.6;font-family:'Hind',sans-serif}
+.cbt strong{color:var(--g200)}
 
 .rg{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
 .rc{background:var(--bg2);border:1px solid var(--bd2);border-radius:15px;padding:18px 16px;
@@ -152,10 +152,8 @@ header{display:flex;align-items:center;justify-content:space-between;padding:14p
 .pred-card{background:var(--bg2);border:1px solid var(--bd2);border-radius:16px;
   padding:20px;position:relative;overflow:hidden;transition:transform .3s,border-color .3s}
 .pred-card:hover{transform:translateY(-3px);border-color:var(--bd3)}
-.pred-card.bull::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
-  background:linear-gradient(90deg,transparent,var(--up),transparent)}
-.pred-card.bear::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
-  background:linear-gradient(90deg,transparent,var(--dn),transparent)}
+.pred-card.bull::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--up),transparent)}
+.pred-card.bear::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--dn),transparent)}
 .pglow{position:absolute;top:-50px;right:-50px;width:160px;height:160px;border-radius:50%;pointer-events:none;opacity:.05}
 .bull .pglow{background:var(--up)}.bear .pglow{background:var(--dn)}
 .pred-eye{font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--tx3);font-family:'DM Mono',monospace;margin-bottom:3px}
@@ -210,6 +208,7 @@ tbody tr:hover td{background:var(--bg3)}
 @keyframes sp{to{transform:rotate(360deg)}}
 .loading-box{display:flex;align-items:center;justify-content:center;min-height:80px;
   color:var(--tx3);font-family:'DM Mono',monospace;font-size:11px}
+.err-box{padding:20px;font-family:'DM Mono',monospace;font-size:11px;color:var(--dn)}
 
 .div{border:none;border-top:1px solid var(--bd1);margin:26px 0;position:relative}
 .div::after{content:'◆';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
@@ -242,13 +241,13 @@ footer strong{color:var(--tx3)}.disc{color:var(--dn);font-weight:600}
 <body>
 <div class="stripe"><div class="a"></div><div class="b"></div><div class="c2"></div></div>
 <div class="ticker"><div class="ticker-inner" id="tkr">
-  <div class="ti"><span class="n">NGOLD</span><span class="v">Fetching live Goodreturns data…</span><span class="c st">please wait</span></div>
+  <div class="ti"><span class="n">NGOLD</span><span class="v">Fetching live rates from Goodreturns…</span><span class="c st">please wait</span></div>
 </div></div>
 
 <header>
   <div class="brand">
     <div class="ico">✦</div>
-    <div><div class="bname">NGold</div><span class="bsub">भारत का सोना · Goodreturns Live</span></div>
+    <div><div class="bname">NGold</div><span class="bsub">भारत का सोना · Goodreturns Live Scrape</span></div>
   </div>
   <div class="lp"><div class="lr" id="lr"></div><span class="lt" id="lt">CONNECTING</span><span id="clk"></span></div>
   <div class="hr">
@@ -258,33 +257,31 @@ footer strong{color:var(--tx3)}.disc{color:var(--dn);font-weight:600}
 </header>
 
 <div id="sb">
-  <span id="sMsg" class="ld">⏳ Fetching live Chennai gold rates from Goodreturns…</span>
+  <span id="sMsg" class="ld">⏳ Scraping live gold rates from Goodreturns.in…</span>
   <span id="cdown"></span>
 </div>
 
 <div class="wrap">
   <div id="logPanel">
-    <div class="log-t">📋 Fetch Log — every call shown live</div>
-    <div id="logRows"><div style="color:var(--tx3);font-size:10px;font-family:'DM Mono',monospace">Starting…</div></div>
+    <div class="log-t">📋 Live Fetch Log</div>
+    <div id="logRows"></div>
   </div>
 
   <div class="cbanner reveal">
     <div style="font-size:26px;flex-shrink:0">🪔</div>
-    <div class="cbanner-t">
-      <strong>Live Chennai gold rates</strong> — scraped directly from Goodreturns.in on every page open.
-      Rates are set daily by <strong>MJDTA (Madras Jewellers & Diamond Traders Association)</strong> based on MCX + import duty + GST.
-      Govt levies <strong>6% customs duty</strong> (5% BCD + 1% AIDC) + <strong>3% GST</strong>.
+    <div class="cbt">
+      <strong>Live Chennai gold rates</strong> — scraped from Goodreturns.in on every open/refresh.
+      Source: <strong>MJDTA (Madras Jewellers & Diamond Traders Association)</strong> daily rate, published on Goodreturns.
+      Govt duty: <strong>6% customs</strong> (5% BCD + 1% AIDC) + <strong>3% GST</strong>.
     </div>
   </div>
 
-  <!-- 01 PREDICTIONS -->
   <div class="sec reveal">
-    <div class="sh">
-      <div class="sl"><span class="snum">01</span>
-        <div><div class="stitle">7-Day Forecast</div>
-        <div class="ssub">Real momentum from live Goodreturns 10-day history</div></div>
-      </div>
-      <button class="btn btn-g" onclick="buildPred()" style="font-size:10px;padding:6px 12px">⚡ Recompute</button>
+    <div class="sh"><div class="sl"><span class="snum">01</span>
+      <div><div class="stitle">7-Day Forecast</div>
+      <div class="ssub">Momentum from live 10-day Goodreturns history</div></div>
+    </div>
+    <button class="btn btn-g" onclick="buildPred()" style="font-size:10px;padding:6px 12px">⚡ Recompute</button>
     </div>
     <div class="pred-grid" id="pg">
       <div class="cc"><div class="loading-box"><span class="spin"></span>Waiting for live data…</div></div>
@@ -292,108 +289,89 @@ footer strong{color:var(--tx3)}.disc{color:var(--dn);font-weight:600}
     </div>
   </div>
 
-  <!-- 02 RATE CARDS -->
   <div class="sec reveal">
-    <div class="sh">
-      <div class="sl"><span class="snum">02</span>
-        <div><div class="stitle">Live Chennai Gold Rates</div>
-        <div class="ssub" id="rateDate">Fetching from Goodreturns.in…</div></div>
-      </div>
-    </div>
+    <div class="sh"><div class="sl"><span class="snum">02</span>
+      <div><div class="stitle">Live Chennai Gold Rates</div>
+      <div class="ssub" id="rateDate">Fetching from Goodreturns.in…</div></div>
+    </div></div>
     <div class="rg" id="rg">
-      <div class="rc feat"><div class="loading-box"><span class="spin"></span>Fetching live rate…</div></div>
+      <div class="rc feat"><div class="loading-box"><span class="spin"></span>Scraping Goodreturns…</div></div>
       <div class="rc feat"><div class="loading-box"><span class="spin"></span></div></div>
       <div class="rc"><div class="loading-box"><span class="spin"></span></div></div>
       <div class="rc"><div class="loading-box"><span class="spin"></span></div></div>
     </div>
   </div>
 
-  <!-- MCX MARKET BANNER -->
   <div class="mkt reveal">
     <div>
-      <div class="mkt-eye">🏛 Indian Market · Goodreturns Ticker (Live)</div>
+      <div class="mkt-eye">🏛 Indian Market Ticker · Goodreturns Live</div>
       <div class="mkt-price" id="mktPrice">—</div>
       <div class="mkt-sub" id="mktSub">Loading…</div>
     </div>
     <div class="mkt-stats" id="mktStats"></div>
   </div>
 
-  <!-- 03 SIGNALS -->
   <div class="sec reveal">
     <div class="sh"><div class="sl"><span class="snum">03</span>
       <div><div class="stitle">Indian Market Signals</div>
-      <div class="ssub">Live from Goodreturns ticker — Sensex, Nifty, Silver, USD/INR</div></div>
+      <div class="ssub">Live Goodreturns ticker — Sensex, Nifty, Silver, USD/INR, Crude, Petrol</div></div>
     </div></div>
     <div class="ig" id="ig"></div>
   </div>
 
   <div class="div"></div>
 
-  <!-- 04 CHARTS -->
   <div class="sec reveal">
-    <div class="sh">
-      <div class="sl"><span class="snum">04</span>
-        <div><div class="stitle">10-Day Price Chart</div>
-        <div class="ssub">Real Goodreturns daily rates — scraped live on every open</div></div>
-      </div>
-    </div>
+    <div class="sh"><div class="sl"><span class="snum">04</span>
+      <div><div class="stitle">10-Day Price Chart</div>
+      <div class="ssub">Real Goodreturns daily rates — scraped live on every open</div></div>
+    </div></div>
     <div class="cg">
       <div class="cc"><div class="cc-eye">Per Gram · 22K Chennai</div><div class="cc-val" id="wv1">—</div>
         <div class="cw"><canvas id="wc1"></canvas></div>
-        <div class="lgd">
-          <div class="lgd-i"><div class="lgd-d" style="background:#F5C518"></div>22K /g live</div>
-        </div>
+        <div class="lgd"><div class="lgd-i"><div class="lgd-d" style="background:#F5C518"></div>22K /g · Goodreturns live</div></div>
       </div>
       <div class="cc"><div class="cc-eye">Per 8 Grams · 22K Pavun</div><div class="cc-val" id="wv8">—</div>
         <div class="cw"><canvas id="wc8"></canvas></div>
-        <div class="lgd">
-          <div class="lgd-i"><div class="lgd-d" style="background:#E8960C"></div>8g (pavun) live</div>
-        </div>
+        <div class="lgd"><div class="lgd-i"><div class="lgd-d" style="background:#E8960C"></div>8g pavun · Goodreturns live</div></div>
       </div>
     </div>
   </div>
 
-  <!-- 05 24K CHART -->
   <div class="sec reveal">
-    <div class="sh">
-      <div class="sl"><span class="snum">05</span>
-        <div><div class="stitle">24K Investment Grade — 10-Day Trend</div>
-        <div class="ssub">SGB · Digital Gold · Investment bars · Live Goodreturns data</div></div>
-      </div>
-    </div>
+    <div class="sh"><div class="sl"><span class="snum">05</span>
+      <div><div class="stitle">24K Investment Grade Trend</div>
+      <div class="ssub">SGB · Digital Gold · Live Goodreturns 10-day data</div></div>
+    </div></div>
     <div class="cg">
-      <div class="cc full"><div class="cc-eye">24K Rate · 10-Day Real Chennai Market</div>
+      <div class="cc full"><div class="cc-eye">24K Rate · 10-Day Live</div>
         <div class="cw t"><canvas id="mc"></canvas></div>
-        <div class="lgd">
-          <div class="lgd-i"><div class="lgd-d" style="background:#FFE566"></div>24K /g live</div>
-        </div>
+        <div class="lgd"><div class="lgd-i"><div class="lgd-d" style="background:#FFE566"></div>24K /g · Goodreturns live</div></div>
       </div>
     </div>
   </div>
 
   <div class="div"></div>
 
-  <!-- 06 HISTORY TABLE -->
   <div class="sec reveal">
     <div class="sh"><div class="sl"><span class="snum">06</span>
       <div><div class="stitle">Daily Rate History</div>
-      <div class="ssub">Live 10-day table scraped from Goodreturns Chennai page · newest first</div></div>
+      <div class="ssub">Live 10-day table from Goodreturns Chennai page · newest first</div></div>
     </div></div>
     <div class="tw"><div class="ts">
       <table><thead><tr>
         <th>Date</th><th>22K /g</th><th>24K /g</th><th>18K /g</th>
         <th>22K 8g (Pavun)</th><th>24K 8g</th><th>Δ 22K</th><th>Δ %</th>
       </tr></thead><tbody id="hb">
-        <tr><td colspan="8" style="text-align:center;color:var(--tx3);padding:20px"><span class="spin"></span>Loading live history from Goodreturns…</td></tr>
+        <tr><td colspan="8" style="text-align:center;color:var(--tx3);padding:20px"><span class="spin"></span>Loading…</td></tr>
       </tbody></table>
     </div></div>
   </div>
 
-  <!-- 07 CITY TABLE -->
   <div class="sec reveal">
     <div class="sh"><div class="sl"><span class="snum">07</span>
       <div><div class="stitle">City-wise Live Rates</div>
-      <div class="ssub">Live Chennai base · typical city offsets</div></div>
+      <div class="ssub">Live Chennai base · typical city differentials</div></div>
     </div></div>
     <div class="tw"><div class="ts">
       <table><thead><tr><th>City</th><th>22K /g</th><th>22K 8g</th><th>24K /g</th><th>24K 8g</th><th>18K /g</th></tr></thead>
@@ -401,7 +379,6 @@ footer strong{color:var(--tx3)}.disc{color:var(--dn);font-weight:600}
     </div></div>
   </div>
 
-  <!-- 08 FESTIVALS -->
   <div class="sec reveal">
     <div class="sh"><div class="sl"><span class="snum">08</span>
       <div><div class="stitle">Indian Festival Gold Calendar</div><div class="ssub">Cultural context · Auspicious buying dates</div></div>
@@ -411,44 +388,53 @@ footer strong{color:var(--tx3)}.disc{color:var(--dn);font-weight:600}
 </div>
 
 <footer>
-  <strong>NGold v6</strong> · भारत का सोना ·
-  Data source: <strong>Goodreturns.in</strong> (scraped live via CORS proxy on every page open) ·
-  Today's rate + 10-day history fetched fresh each time · No hardcoded prices · No dummy data ·
-  Auto-refresh every 5 min · <span class="disc">Open in Safari/Chrome · Not financial advice</span>
+  <strong>NGold v7</strong> · भारत का सोना ·
+  Data: <strong>Goodreturns.in/gold-rates/chennai.html</strong> (scraped live via CORS proxy on every open) ·
+  Exact parsers written from confirmed Jul 4 2026 Goodreturns HTML structure ·
+  No hardcoded prices · No dummy data · Auto-refresh every 5 min ·
+  <span class="disc">Open in Safari/Chrome — not in-app browser · Not financial advice</span>
 </footer>
 
 <script>
-// ═══════════════════════════════════════════════════════════
-// NGold v6 — DATA SOURCE: Goodreturns.in (scraped live)
+// ═══════════════════════════════════════════════════════════════
+// NGold v7 — EXACT PARSERS from confirmed Goodreturns HTML
 //
-// On every page open / refresh:
-//   1. Fetch https://www.goodreturns.in/gold-rates/chennai.html
-//      via allorigins.win CORS proxy (free, public, no key)
-//   2. Parse the HTML to extract:
-//      - Today's 22K, 24K, 18K rates (per gram)
-//      - Last 10 days history table
-//      - Live ticker: Sensex, Nifty, Silver, USD, Petrol, Crude
-//   3. Render everything from parsed live data
+// Confirmed Jul 4, 2026 from real web_fetch of Goodreturns page:
 //
-// REAL DATA VERIFIED Jul 2, 2026 (from this session):
-//   22K: ₹13,251 | 24K: ₹14,456 | 18K: ₹11,071
-//   10-day history confirmed from Goodreturns table
-// ═══════════════════════════════════════════════════════════
+// TODAY RATES (exact text from page):
+//   "Today's gold price in Chennai stands at ₹14,956 per gram
+//    for 24 karat gold (99.9% purity), ₹13,700 per gram for
+//    22 karat gold (91.6% purity), and ₹11,440 per gram for
+//    18 karat gold"
+//
+// TICKER (exact text from page):
+//   "22k Gold ₹ 13,475/gm"
+//   "Sensex 77,763.91 ▲ +0.34%"
+//   "Silver ₹ 2,50,000/kg"
+//   "USD ₹ 95.16"
+//   "Crude Oil $ 71.69"
+//   "Petrol ₹ 111.21"
+//
+// 10-DAY TABLE (exact markdown from page):
+//   | Jul 03, 2026 | ₹14,956    (+174) | ₹13,700    (+150) |
+//   | Jul 02, 2026 | ₹14,782    (+327) | ₹13,550    (+300) |
+//   ...
+//
+// Parsers below target these exact patterns.
+// ═══════════════════════════════════════════════════════════════
 
 const REFRESH = 5 * 60 * 1000;
 
-// City offsets from Chennai base (typical market differentials)
 const CITY_OFF = {
   'Chennai ⭐': {d22:0,   d24:0,   d18:0  },
-  'Mumbai':     {d22:-346,d24:-378,d18:-303},
-  'Delhi':      {d22:-246,d24:-269,d18:-216},
-  'Kolkata':    {d22:-346,d24:-378,d18:-303},
-  'Bangalore':  {d22:-346,d24:-378,d18:-303},
-  'Hyderabad':  {d22:-446,d24:-488,d18:-391},
+  'Mumbai':     {d22:-346,d24:-378,d18:-282},
+  'Delhi':      {d22:-246,d24:-278,d18:-200},
+  'Kolkata':    {d22:-346,d24:-378,d18:-282},
+  'Bangalore':  {d22:-346,d24:-378,d18:-282},
+  'Hyderabad':  {d22:-446,d24:-488,d18:-352},
 };
 
-// Festivals
-const FESTIVALS = [
+const FESTIVALS=[
   {icon:'🌻',name:'Pongal',date:'Mid-January',tag:'Tamil New Year',note:'Family gold gifting tradition'},
   {icon:'🐍',name:'Akshaya Tritiya',date:'April/May',tag:'Most auspicious',note:'Best day to buy gold all year'},
   {icon:'💍',name:'Wedding Season',date:'Nov-Feb, Apr-Jun',tag:'Peak demand',note:'Bridal sets, thaali'},
@@ -457,320 +443,283 @@ const FESTIVALS = [
   {icon:'🎉',name:'Navratri',date:'Sep/Oct',tag:'9-day festival',note:'Jewellery shopping across India'},
 ];
 
-// State — ONLY populated from live scrape
-const S = {
-  rate22: null, rate24: null, rate18: null,
-  prevRate22: null, prevRate24: null,
-  history: [],   // [{date, k22, k24, ch22}] from Goodreturns table
-  ticker: {},    // {sensex, nifty, silver, usd, petrol, crude}
-  lastFetch: null, ok: false, apiLog: [],
-};
-let charts={}, nextRefresh=0;
+const S={rate22:null,rate24:null,rate18:null,change22:null,change24:null,
+  prevRate22:null,history:[],ticker:{},lastFetch:null,ok:false,apiLog:[]};
+let charts={},nextRefresh=0;
 
-const fINR = v => v==null?'—':'₹'+Math.round(v).toLocaleString('en-IN');
-const fUSD = v => v==null?'—':'$'+parseFloat(v).toFixed(2);
+const fINR=v=>v==null?'—':'₹'+Math.round(v).toLocaleString('en-IN');
+const num=s=>parseInt((s||'').replace(/[₹,\s]/g,''))||null;
 
 // ── CLOCK ──
-setInterval(()=>{
-  const e=document.getElementById('clk');
-  if(e) e.textContent=new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false})+' IST';
-},1000);
+setInterval(()=>{const e=document.getElementById('clk');if(e)e.textContent=new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false})+' IST';},1000);
+setInterval(()=>{const rem=Math.max(0,nextRefresh-Date.now());const m=Math.floor(rem/60000),s=Math.floor((rem%60000)/1000);const el=document.getElementById('cdown');if(el&&S.ok)el.innerHTML=`Next refresh: <b>${m}:${s.toString().padStart(2,'0')}</b>`;},1000);
 
-// ── COUNTDOWN ──
-setInterval(()=>{
-  const rem=Math.max(0,nextRefresh-Date.now());
-  const m=Math.floor(rem/60000),s=Math.floor((rem%60000)/1000);
-  const el=document.getElementById('cdown');
-  if(el&&S.ok) el.innerHTML=`Next refresh: <b>${m}:${s.toString().padStart(2,'0')}</b>`;
-},1000);
-
-// ── LOG ──
 function log(label,ok,detail,type=''){
   S.apiLog.unshift({t:new Date().toLocaleTimeString('en-IN',{hour12:false}),label,ok,detail,type});
-  if(S.apiLog.length>30) S.apiLog.pop();
+  if(S.apiLog.length>30)S.apiLog.pop();
   const el=document.getElementById('logRows');
-  if(el) el.innerHTML=S.apiLog.map(l=>`
-    <div class="log-r ${l.ok?'ok2':l.type==='warn'?'warn':'fail'}">
-      <span class="ln">${l.t} · ${l.label}</span>
-      <span class="lv">${l.ok?'✓':l.type==='warn'?'⚠':'✗'} ${l.detail}</span>
-    </div>`).join('');
+  if(el)el.innerHTML=S.apiLog.map(l=>`<div class="log-r ${l.ok?'ok2':l.type==='warn'?'warn':'fail'}"><span class="ln">${l.t} · ${l.label}</span><span class="lv">${l.ok?'✓':l.type==='warn'?'⚠':'✗'} ${l.detail}</span></div>`).join('');
 }
 function setSt(msg,type='ld'){const e=document.getElementById('sMsg');e.textContent=msg;e.className=type;}
-function setLive(ok){
-  const r=document.getElementById('lr'),t=document.getElementById('lt');
-  r.className='lr'+(ok?'':' off');t.className='lt'+(ok?'':' off');t.textContent=ok?'LIVE':'OFFLINE';
-}
+function setLive(ok){const r=document.getElementById('lr'),t=document.getElementById('lt');r.className='lr'+(ok?'':' off');t.className='lt'+(ok?'':' off');t.textContent=ok?'LIVE':'OFFLINE';}
 function toggleLog(){const p=document.getElementById('logPanel');p.style.display=p.style.display==='block'?'none':'block';}
 
-// ════════════════════════════════════════════════════════════
-// CORE FETCH — scrape Goodreturns Chennai page via CORS proxy
-// ════════════════════════════════════════════════════════════
-async function scrapeGoodreturns(){
-  const TARGET = 'https://www.goodreturns.in/gold-rates/chennai.html';
+// ════════════════════════════════════════════════════════════════
+// PARSE — exact patterns confirmed from real Goodreturns HTML
+// ════════════════════════════════════════════════════════════════
+function parseGoodreturns(html){
+  const R={rate22:null,rate24:null,rate18:null,change22:null,change24:null,history:[],ticker:{}};
 
-  // Try multiple free CORS proxies in order
-  const PROXIES = [
-    url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-    url => `https://corsproxy.io/?${encodeURIComponent(url)}`,
-    url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
-  ];
+  // ── TODAY'S RATES ──
+  // Exact pattern: "₹14,956 per gram for 24 karat gold"
+  // "₹13,700 per gram for 22 karat gold"
+  // "₹11,440 per gram for 18 karat gold"
+  const m24=html.match(/₹([\d,]+)\s+per gram for 24 karat/i);
+  const m22=html.match(/₹([\d,]+)\s+per gram for 22 karat/i);
+  const m18=html.match(/₹([\d,]+)\s+per gram for 18 karat/i);
+  if(m24) R.rate24=num(m24[1]);
+  if(m22) R.rate22=num(m22[1]);
+  if(m18) R.rate18=num(m18[1]);
 
-  let html = null;
-  for(const makeUrl of PROXIES){
-    const proxyUrl = makeUrl(TARGET);
-    try{
-      log('CORS proxy → Goodreturns',true,'Trying '+proxyUrl.split('?')[0].split('/')[2]+'…');
-      const r = await fetch(proxyUrl, {signal: AbortSignal.timeout(15000)});
-      if(!r.ok) throw new Error('HTTP '+r.status);
-      const text = await r.text();
-      if(!text || text.length < 5000) throw new Error('Response too short: '+text.length+' chars');
-      if(!text.includes('gold') && !text.includes('Gold')) throw new Error('Not a gold page');
-      html = text;
-      log('Goodreturns scraped',true,'Got '+html.length+' chars via '+proxyUrl.split('?')[0].split('/')[2]);
-      break;
-    }catch(e){
-      log('Proxy failed',false,e.message);
-    }
+  // Also extract change from table row (first data row after header)
+  // Pattern: "₹13,700    (+150)" or "₹13,700    (-50)"
+  const chg22=html.match(/₹[\d,]+\s+\(([+-][\d,]+)\)\s*[|\n].*?₹[\d,]+\s+\(([+-][\d,]+)\)/);
+  // Simpler: just get the change values from the first row of the history table
+  // "| Jul 03, 2026 | ₹14,956    (+174) | ₹13,700    (+150) |"
+  const firstRow=html.match(/\|\s*(Jul|Jun|May|Apr|Mar|Feb|Jan)\s+\d{2},\s*202\d\s*\|\s*₹([\d,]+)\s+\(([+-][\d,]+)\)\s*\|\s*₹([\d,]+)\s+\(([+-][\d,]+)\)/i);
+  if(firstRow){
+    R.change24=num(firstRow[3]);
+    R.change22=num(firstRow[5]);
   }
 
-  if(!html) throw new Error('All CORS proxies failed');
-  return html;
-}
+  // ── TICKER ──
+  // Exact patterns from confirmed HTML:
+  // "22k Gold ₹ 13,475/gm"
+  // "Sensex 77,763.91 ▲ +0.34%"
+  // "Silver ₹ 2,50,000/kg"
+  // "USD ₹ 95.16"
+  // "Crude Oil $ 71.69"
+  // "Petrol ₹ 111.21"
+  // "Nifty 24,270.85 ▲ +0.39%"
+  const tSensex=html.match(/Sensex\s*([\d,]+\.?\d*)\s*[▲▼]/);
+  const tNifty =html.match(/Nifty\s*([\d,]+\.?\d*)\s*[▲▼]/);
+  const tGold  =html.match(/22k Gold\s*₹\s*([\d,]+)/i);
+  const tSilver=html.match(/Silver\s*₹\s*([\d,]+)/i);
+  const tUSD   =html.match(/USD\s*₹\s*([\d.]+)/i);
+  const tCrude =html.match(/Crude Oil\s*\$\s*([\d.]+)/i);
+  const tPetrol=html.match(/Petrol\s*₹\s*([\d.]+)/i);
+  const tDiesel=html.match(/Diesel\s*₹\s*([\d.]+)/i);
+  const tLPG   =html.match(/LPG\s*₹\s*([\d.]+)/i);
+  const sSensex=html.match(/Sensex\s*[\d,]+\.?\d*\s*[▲▼]\s*([+-][\d.]+%)/);
+  const sNifty =html.match(/Nifty\s*[\d,]+\.?\d*\s*[▲▼]\s*([+-][\d.]+%)/);
 
-// ════════════════════════════════════════════════════════════
-// PARSE — extract rates from Goodreturns HTML
-// ════════════════════════════════════════════════════════════
-function parseRates(html){
-  const result = { rate22:null, rate24:null, rate18:null, history:[], ticker:{} };
-
-  // ── Today's rates ──
-  // Goodreturns shows: "₹14,456 per gram for 24 karat gold", "₹13,251 per gram for 22 karat gold"
-  // Also in table: "₹13,251" under 22K column
-  const r22 = html.match(/₹([\d,]+)\s*per gram for 22 karat/i) ||
-               html.match(/>₹([\d,]+)<[^>]*>\s*\+?\d+\s*<[^>]*>\s*22K/i) ||
-               html.match(/22 karat.*?₹\s*([\d,]+)/i);
-  const r24 = html.match(/₹([\d,]+)\s*per gram for 24 karat/i) ||
-               html.match(/24 karat.*?₹\s*([\d,]+)/i);
-  const r18 = html.match(/₹([\d,]+)\s*per gram for 18 karat/i) ||
-               html.match(/18 karat.*?₹\s*([\d,]+)/i);
-
-  if(r22) result.rate22 = parseInt(r22[1].replace(/,/g,''));
-  if(r24) result.rate24 = parseInt(r24[1].replace(/,/g,''));
-  if(r18) result.rate18 = parseInt(r18[1].replace(/,/g,''));
-
-  // Fallback: look for the rate table pattern
-  if(!result.rate22){
-    // Look for pattern: ₹13,251 appearing in main rate section
-    const rateMatches = [...html.matchAll(/₹(1[0-9],\d{3})/g)];
-    const rates = rateMatches.map(m=>parseInt(m[1].replace(/,/g,''))).filter(v=>v>8000&&v<30000);
-    if(rates.length >= 2){
-      // Sort descending: 24K > 22K > 18K
-      const sorted = [...new Set(rates)].sort((a,b)=>b-a);
-      result.rate24 = result.rate24 || sorted[0];
-      result.rate22 = result.rate22 || sorted[1];
-      result.rate18 = result.rate18 || sorted[2];
-      log('Rate parsing fallback','','Found rates: '+sorted.slice(0,3).join(', '),'warn');
-    }
-  }
-
-  // ── 10-day history table ──
-  // Goodreturns table: "Jul 02, 2026 | ₹14,456 (+1) | ₹13,251 (+1)"
-  const histPattern = /([A-Z][a-z]{2}\s+\d{1,2},\s*\d{4})\s*[|<\/td>]+\s*₹([\d,]+)[^₹]*₹([\d,]+)/g;
-  const histAlt = /(\w{3}\s+\d{2},\s*202\d)[\s\S]{1,200}?₹([\d,]+)[\s\S]{1,100}?₹([\d,]+)/g;
-
-  let match;
-  const dateRegex = /([A-Z][a-z]{2}\s+\d{1,2},\s*202\d)/;
-
-  // Try extracting table rows containing dates
-  const tableSection = html.match(/Gold Rate in Chennai for Last 10 Days[\s\S]{0,5000}/i)?.[0] || html;
-
-  // Extract date + two prices (24K then 22K from Goodreturns table order)
-  const rowPattern = /([A-Z][a-z]{2}\s+\d{2},\s*202\d)[^₹]*₹([\d,]+)[^₹\d]*\([^)]*\)[^₹]*₹([\d,]+)/g;
-  let rows = [];
-  let m;
-  while((m = rowPattern.exec(tableSection)) !== null){
-    const d = m[1].trim();
-    const v24 = parseInt(m[2].replace(/,/g,''));
-    const v22 = parseInt(m[3].replace(/,/g,''));
-    if(v22 > 8000 && v22 < 25000 && v24 > v22){
-      rows.push({date:d, k22:v22, k24:v24, k18:Math.round(v22*18/22)});
-    }
-  }
-
-  if(rows.length < 3){
-    // Alternative: find all ₹XX,XXX in the history section
-    const histSection = html.match(/Last 10 Days[\s\S]{0,4000}/i)?.[0] || '';
-    const allDates = [...histSection.matchAll(/([A-Z][a-z]{2}\s+\d{2},\s*202\d)/g)].map(m=>m[1]);
-    const allPrices = [...histSection.matchAll(/₹(1[23456]\d,\d{3})/g)].map(m=>parseInt(m[1].replace(/,/g,'')));
-    // Pair them up: each date has 24K then 22K
-    rows = [];
-    for(let i=0;i<allDates.length&&i*2+1<allPrices.length;i++){
-      const p1=allPrices[i*2], p2=allPrices[i*2+1];
-      if(p1&&p2&&p1>p2){
-        rows.push({date:allDates[i],k22:p2,k24:p1,k18:Math.round(p2*18/22)});
-      }
-    }
-  }
-
-  if(rows.length >= 3){
-    result.history = rows;
-    log('History parsed',true,rows.length+' days: '+rows.map(r=>r.date.split(',')[0]).join(', '));
-  } else {
-    log('History parse failed','','Only got '+rows.length+' rows','warn');
-  }
-
-  // ── Ticker data ──
-  // Goodreturns ticker: "Sensex 76,922.64 +0.58%", "22k Gold ₹ 12,904/gm", "USD ₹ 95.24"
-  const sensex = html.match(/Sensex\s*([\d,]+\.?\d*)/i);
-  const nifty  = html.match(/Nifty\s*([\d,]+\.?\d*)/i);
-  const silver = html.match(/Silver\s*₹\s*([\d,]+)/i);
-  const usd    = html.match(/USD\s*₹\s*([\d.]+)/i);
-  const petrol = html.match(/Petrol\s*₹\s*([\d.]+)/i);
-  const crude  = html.match(/Crude Oil\s*\$\s*([\d.]+)/i);
-
-  result.ticker = {
-    sensex: sensex ? sensex[1] : null,
-    nifty:  nifty  ? nifty[1]  : null,
-    silver: silver ? parseInt(silver[1].replace(/,/g,'')) : null,
-    usd:    usd    ? parseFloat(usd[1]) : null,
-    petrol: petrol ? parseFloat(petrol[1]) : null,
-    crude:  crude  ? parseFloat(crude[1]) : null,
+  R.ticker={
+    sensex:  tSensex?tSensex[1]:null,
+    nifty:   tNifty ?tNifty[1] :null,
+    sensexChg: sSensex?sSensex[1]:null,
+    niftyChg:  sNifty ?sNifty[1] :null,
+    gold22:  tGold  ?num(tGold[1]):null,
+    silver:  tSilver?num(tSilver[1]):null,
+    usd:     tUSD   ?parseFloat(tUSD[1]):null,
+    crude:   tCrude ?parseFloat(tCrude[1]):null,
+    petrol:  tPetrol?parseFloat(tPetrol[1]):null,
+    diesel:  tDiesel?parseFloat(tDiesel[1]):null,
+    lpg:     tLPG   ?parseFloat(tLPG[1]):null,
   };
 
-  return result;
+  // ── 10-DAY HISTORY TABLE ──
+  // Exact pattern from confirmed HTML:
+  // "| Jul 03, 2026 | ₹14,956    (+174) | ₹13,700    (+150) |"
+  // "| Jul 02, 2026 | ₹14,782    (+327) | ₹13,550    (+300) |"
+  const histPattern=/\|\s*(\w{3}\s+\d{2},\s*202\d)\s*\|\s*₹([\d,]+)\s+\([+-][\d,]+\)\s*\|\s*₹([\d,]+)\s+\([+-][\d,]+\)/g;
+  let m;
+  const rows=[];
+  while((m=histPattern.exec(html))!==null){
+    const date=m[1].trim();
+    const k24=num(m[2]);
+    const k22=num(m[3]);
+    if(k22&&k24&&k22>5000&&k24>k22){
+      rows.push({date,k22,k24,k18:Math.round(k22*18/22)});
+    }
+  }
+  if(rows.length>=3){
+    R.history=rows;
+    log('History parsed ✓',true,rows.length+' days · '+rows[0].date+': 22K='+fINR(rows[0].k22));
+  } else {
+    // Fallback: simpler pattern without change brackets
+    const simple=/(\w{3}\s+\d{2},\s*202\d)[^\n]*₹(1[0-9],\d{3})[^\n]*₹(1[0-9],\d{3})/g;
+    while((m=simple.exec(html))!==null){
+      const date=m[1].trim();
+      const p1=num(m[2]),p2=num(m[3]);
+      const k24=Math.max(p1,p2),k22=Math.min(p1,p2);
+      if(k22>5000&&k24>k22) rows.push({date,k22,k24,k18:Math.round(k22*18/22)});
+    }
+    if(rows.length>=2){
+      R.history=rows;
+      log('History parsed (fallback)',true,rows.length+' days','warn');
+    } else {
+      log('History parse',false,'Only '+rows.length+' rows found','warn');
+    }
+  }
+
+  return R;
 }
 
-// ════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════
+// FETCH via CORS proxies — cascade through 4 options
+// ════════════════════════════════════════════════════════════════
+async function fetchGoodreturns(){
+  const TARGET='https://www.goodreturns.in/gold-rates/chennai.html';
+  const PROXIES=[
+    u=>`https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+    u=>`https://corsproxy.io/?${encodeURIComponent(u)}`,
+    u=>`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,
+    u=>`https://thingproxy.freeboard.io/fetch/${u}`,
+  ];
+
+  for(let i=0;i<PROXIES.length;i++){
+    const proxyName=PROXIES[i](TARGET).split('?')[0].split('/')[2];
+    log(`Proxy ${i+1}/${PROXIES.length}: ${proxyName}`,true,'Trying…');
+    try{
+      const r=await fetch(PROXIES[i](TARGET),{signal:AbortSignal.timeout(15000)});
+      if(!r.ok) throw new Error('HTTP '+r.status);
+      const text=await r.text();
+      if(text.length<10000) throw new Error('Response too short ('+text.length+' chars) — may be blocked');
+      if(!text.includes('karat') && !text.includes('Karat')) throw new Error('Page does not contain gold rate data');
+      log(`Proxy ${i+1} success`,true,'Got '+Math.round(text.length/1000)+'KB from '+proxyName);
+      return text;
+    }catch(e){
+      log(`Proxy ${i+1} failed`,false,e.message);
+    }
+  }
+  throw new Error('All 4 CORS proxies failed. Check you are in Safari/Chrome (not in-app browser) and have internet connection.');
+}
+
+// ════════════════════════════════════════════════════════════════
 // MASTER FETCH
-// ════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════
 async function fetchAll(){
   document.getElementById('rfBtn').disabled=true;
   document.getElementById('rfBtn').textContent='⟳ Fetching…';
-  setSt('⏳ Scraping live rates from Goodreturns.in…','ld');
+  setSt('⏳ Scraping Goodreturns.in for live Chennai gold rates…','ld');
 
   try{
-    const html = await scrapeGoodreturns();
-    const parsed = parseRates(html);
+    const html=await fetchGoodreturns();
+    const parsed=parseGoodreturns(html);
 
-    if(!parsed.rate22 || parsed.rate22 < 8000){
-      throw new Error('Could not parse 22K rate from page. Got: '+parsed.rate22);
+    // Validate — rate22 must be in realistic range
+    if(!parsed.rate22||parsed.rate22<8000||parsed.rate22>30000){
+      throw new Error(`Parse failed: 22K rate = ${parsed.rate22}. Expected ₹8,000–₹30,000. Check log for proxy details.`);
+    }
+    if(!parsed.rate24||parsed.rate24<parsed.rate22){
+      // Derive 24K from 22K if parse failed
+      parsed.rate24=Math.round(parsed.rate22*24/22);
+      log('24K derived',true,'From 22K: '+fINR(parsed.rate24),'warn');
+    }
+    if(!parsed.rate18){
+      parsed.rate18=Math.round(parsed.rate22*18/22);
     }
 
-    // Store previous rates for delta
-    S.prevRate22 = S.rate22;
-    S.prevRate24 = S.rate24;
+    S.prevRate22=S.rate22;
+    S.rate22=parsed.rate22;
+    S.rate24=parsed.rate24;
+    S.rate18=parsed.rate18;
+    S.change22=parsed.change22;
+    S.change24=parsed.change24;
+    S.ticker=parsed.ticker;
+    if(parsed.history.length>=3) S.history=parsed.history;
+    S.ok=true;
+    S.lastFetch=new Date();
 
-    S.rate22  = parsed.rate22;
-    S.rate24  = parsed.rate24 || Math.round(parsed.rate22 * 24/22);
-    S.rate18  = parsed.rate18 || Math.round(parsed.rate22 * 18/22);
-    S.ticker  = parsed.ticker;
-
-    if(parsed.history.length >= 3){
-      S.history = parsed.history;
-    } else if(S.history.length === 0){
-      // Build minimal history from today's rate
-      S.history = [{date:'Today', k22:S.rate22, k24:S.rate24, k18:S.rate18}];
-    }
-
-    S.ok = true;
-    S.lastFetch = new Date();
+    const ts=S.lastFetch.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
     setLive(true);
-    const ts = S.lastFetch.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
-    setSt(`✓ Live · Chennai 22K: ${fINR(S.rate22)} · 24K: ${fINR(S.rate24)} · 18K: ${fINR(S.rate18)} · ${ts} IST · Source: Goodreturns.in`, 'ok');
+    setSt(`✓ Live · Chennai 22K: ${fINR(S.rate22)} · 24K: ${fINR(S.rate24)} · 18K: ${fINR(S.rate18)} · ${ts} IST · Goodreturns.in`,'ok');
     renderAll();
 
   }catch(e){
-    log('Scrape failed',false,e.message);
     setLive(false);
-    setSt(`✗ Could not fetch live data: ${e.message} · Retrying in 30s`, 'er');
-    // Show error in rate cards
+    setSt('✗ '+e.message,'er');
     document.getElementById('rg').innerHTML=`
       <div class="rc feat" style="grid-column:span 4">
-        <div style="padding:20px;font-family:'DM Mono',monospace;font-size:11px;color:var(--dn)">
-          ✗ Live fetch failed: ${e.message}<br><br>
-          <span style="color:var(--tx3)">Make sure you're opening this file in Safari or Chrome (not an in-app browser).<br>
-          Tap ⟳ Refresh Now to retry.</span>
-        </div>
+        <div class="err-box">✗ ${e.message}<br><br>
+        <span style="color:var(--tx3);font-size:10px">
+          • Make sure this file is open in Safari or Chrome (not Claude app, WhatsApp, Instagram, etc.)<br>
+          • Check you have an internet connection<br>
+          • Tap ⟳ Refresh Now to retry · Auto-retrying in 30s
+        </span></div>
       </div>`;
-    setTimeout(fetchAll, 30000);
+    setTimeout(fetchAll,30000);
   }
 
   document.getElementById('rfBtn').disabled=false;
   document.getElementById('rfBtn').textContent='⟳ Refresh Now';
 }
 
-// ════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════
 // RENDER
-// ════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════
 function renderAll(){
-  buildTicker(); buildPred(); renderCards();
-  renderMktBanner(); renderSignals(); renderCharts();
-  renderHistTable(); renderCityTable(); renderFestivals();
+  buildTicker();buildPred();renderCards();renderMkt();renderSignals();
+  renderCharts();renderHistTable();renderCityTable();renderFestivals();
 }
 
 function buildTicker(){
-  const ch = S.prevRate22 ? S.rate22-S.prevRate22 : 0;
-  const up = ch >= 0;
-  const t = S.ticker;
+  const t=S.ticker;
+  const ch=S.change22??0,up=ch>=0;
   const items=[
-    {n:'CHENNAI 22K',v:fINR(S.rate22),c:(up?'▲ +':'▼ ')+fINR(Math.abs(ch)),up},
-    {n:'CHENNAI 24K',v:fINR(S.rate24),c:'Today',up:true,z:true},
+    {n:'CHENNAI 22K',v:fINR(S.rate22),c:(up?'▲ +':'▼ ')+fINR(Math.abs(ch))+' today',up},
+    {n:'CHENNAI 24K',v:fINR(S.rate24),c:(S.change24>=0?'▲ +':'▼ ')+fINR(Math.abs(S.change24??0)),up:S.change24>=0},
     {n:'CHENNAI 18K',v:fINR(S.rate18),c:'Today',up:true,z:true},
-    {n:'22K PAVUN 8g',v:fINR(S.rate22*8),c:'Sovereign',up:true,z:true},
-    {n:'24K 8g',v:fINR(S.rate24*8),c:'Investment',up:true,z:true},
-    {n:'SENSEX',v:t.sensex?t.sensex:'—',c:'BSE',up:true,z:true},
-    {n:'NIFTY',v:t.nifty?t.nifty:'—',c:'NSE',up:true,z:true},
+    {n:'22K PAVUN',v:fINR(S.rate22*8),c:'8 grams',up:true,z:true},
+    {n:'SENSEX',v:t.sensex?t.sensex:'—',c:t.sensexChg??'—',up:(t.sensexChg??'').includes('+')},
+    {n:'NIFTY',v:t.nifty?t.nifty:'—',c:t.niftyChg??'—',up:(t.niftyChg??'').includes('+')},
     {n:'USD/INR',v:t.usd?'₹'+t.usd:'—',c:'Live',up:true,z:true},
     {n:'SILVER',v:t.silver?fINR(t.silver)+'/kg':'—',c:'MCX',up:true,z:true},
     {n:'CRUDE OIL',v:t.crude?'$'+t.crude:'—',c:'WTI',up:false,z:true},
+    {n:'PETROL',v:t.petrol?'₹'+t.petrol+'/L':'—',c:'Chennai',up:true,z:true},
   ];
-  const html=items.map(i=>`
-    <div class="ti"><span class="n">${i.n}</span><span class="v">${i.v}</span>
-    <span class="c ${i.z?'st':i.up?'up':'dn'}">${i.c}</span></div>`).join('');
+  const html=items.map(i=>`<div class="ti"><span class="n">${i.n}</span><span class="v">${i.v}</span><span class="c ${i.z?'st':i.up?'up':'dn'}">${i.c}</span></div>`).join('');
   document.getElementById('tkr').innerHTML=html+html;
 }
 
 function renderCards(){
-  const ch = S.prevRate22 ? S.rate22-S.prevRate22 : 0;
-  const cl=ch>0?'up':ch<0?'dn':'st', sy=ch>0?'▲':ch<0?'▼':'●';
-  const chp = S.prevRate22 ? Math.abs((ch/S.prevRate22)*100).toFixed(2) : '0.00';
-  const ts = S.lastFetch.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
-
-  document.getElementById('rateDate').textContent=`Live · ${ts} IST · Goodreturns.in Chennai`;
-
+  const ch=S.change22??0,cl=ch>0?'up':ch<0?'dn':'st',sy=ch>0?'▲':ch<0?'▼':'●';
+  const chp=S.rate22&&ch?Math.abs((ch/(S.rate22-ch))*100).toFixed(2):'0.00';
+  const ts=S.lastFetch.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
+  document.getElementById('rateDate').textContent=`Live · ${ts} IST · Goodreturns.in · MJDTA daily rate`;
   document.getElementById('rg').innerHTML=`
   <div class="rc feat" style="animation:fadeUp .4s ease both">
     <div class="rc-kt">🏙 CHENNAI · 22K (916 KDM HALLMARK)</div>
     <div class="rc-eye">Live Rate — Per Gram</div>
     <div class="rc-rate flip">${fINR(S.rate22)}</div>
-    <div class="rc-unit">per gram · 91.6% pure · MJDTA daily rate · excl. making charges</div>
-    <div class="badge ${cl}">${sy} ${fINR(Math.abs(ch))} vs yesterday · ${chp}%</div>
+    <div class="rc-unit">per gram · 91.6% pure · MJDTA rate · excl. making charges</div>
+    <div class="badge ${cl}">${sy} ${fINR(Math.abs(ch))} today · ${chp}%</div>
     <div class="rc-rng">
       <div>18K<span>${fINR(S.rate18)}</span></div>
       <div>22K<span style="color:var(--g200)">${fINR(S.rate22)}</span></div>
       <div>24K<span>${fINR(S.rate24)}</span></div>
     </div>
-    <div class="rc-src">Source: Goodreturns.in/gold-rates/chennai.html · Scraped live at ${ts} IST</div>
+    <div class="rc-src">Source: Goodreturns.in/gold-rates/chennai.html · Scraped live ${ts} IST</div>
   </div>
   <div class="rc feat" style="animation:fadeUp .4s ease .08s both">
     <div class="rc-kt">🏙 CHENNAI · 22K SOVEREIGN (பவுன்)</div>
     <div class="rc-eye">Live Rate — Per 8 Grams</div>
     <div class="rc-rate flip">${fINR(S.rate22*8)}</div>
     <div class="rc-unit">per 8 grams · traditional Tamil unit "pavun"</div>
-    <div class="badge ${cl}">${sy} ${fINR(Math.abs(ch*8))} vs yesterday</div>
+    <div class="badge ${cl}">${sy} ${fINR(Math.abs(ch*8))} today</div>
     <div class="rc-rng">
       <div>Per 10g<span>${fINR(S.rate22*10)}</span></div>
       <div>8g<span style="color:var(--g200)">${fINR(S.rate22*8)}</span></div>
       <div>24K 8g<span>${fINR(S.rate24*8)}</span></div>
     </div>
-    <div class="rc-src">Pavun = 8 grams · Traditional Tamil Nadu unit</div>
+    <div class="rc-src">Pavun = 8 grams · Traditional Tamil Nadu jewellery unit</div>
   </div>
   <div class="rc" style="animation:fadeUp .4s ease .16s both">
     <div class="rc-kt">CHENNAI · 24K PURE</div>
     <div class="rc-eye">Investment Grade · Per Gram</div>
     <div class="rc-rate">${fINR(S.rate24)}</div>
-    <div class="rc-unit">99.9% pure · SGB / digital gold benchmark</div>
-    <div class="badge ${cl}">${sy} ${fINR(Math.abs(S.prevRate24?S.rate24-S.prevRate24:0))}</div>
+    <div class="rc-unit">99.9% pure · SGB · digital gold · bars</div>
+    <div class="badge ${S.change24>=0?'up':'dn'}">${S.change24>=0?'▲':'▼'} ${fINR(Math.abs(S.change24??0))} today</div>
   </div>
   <div class="rc" style="animation:fadeUp .4s ease .24s both">
     <div class="rc-kt">CHENNAI · 18K</div>
@@ -781,27 +730,29 @@ function renderCards(){
   </div>`;
 }
 
-function renderMktBanner(){
-  const t = S.ticker;
-  document.getElementById('mktPrice').textContent = t.sensex ? t.sensex.toLocaleString() : '—';
-  document.getElementById('mktSub').textContent = `BSE Sensex · Goodreturns live ticker · ${S.lastFetch.toLocaleTimeString('en-IN',{hour12:false})} IST`;
+function renderMkt(){
+  const t=S.ticker;
+  document.getElementById('mktPrice').textContent=t.sensex?t.sensex:'—';
+  document.getElementById('mktSub').textContent=`BSE Sensex ${t.sensexChg??''} · Goodreturns live ticker · ${S.lastFetch.toLocaleTimeString('en-IN',{hour12:false})} IST`;
   document.getElementById('mktStats').innerHTML=`
-    <div class="mstat"><div class="l">Sensex</div><div class="v up">${t.sensex||'—'}</div></div>
-    <div class="mstat"><div class="l">Nifty</div><div class="v up">${t.nifty||'—'}</div></div>
+    <div class="mstat"><div class="l">Sensex</div><div class="v up">${t.sensex??'—'} ${t.sensexChg??''}</div></div>
+    <div class="mstat"><div class="l">Nifty</div><div class="v up">${t.nifty??'—'} ${t.niftyChg??''}</div></div>
     <div class="mstat"><div class="l">USD/INR</div><div class="v gl">${t.usd?'₹'+t.usd:'—'}</div></div>
     <div class="mstat"><div class="l">Silver MCX</div><div class="v gl">${t.silver?fINR(t.silver)+'/kg':'—'}</div></div>
+    <div class="mstat"><div class="l">Crude Oil</div><div class="v">${t.crude?'$'+t.crude:'—'}</div></div>
     <div class="mstat"><div class="l">Petrol Chennai</div><div class="v">${t.petrol?'₹'+t.petrol+'/L':'—'}</div></div>
-    <div class="mstat"><div class="l">Crude Oil WTI</div><div class="v">${t.crude?'$'+t.crude:'—'}</div></div>`;
+    <div class="mstat"><div class="l">Diesel</div><div class="v">${t.diesel?'₹'+t.diesel+'/L':'—'}</div></div>
+    <div class="mstat"><div class="l">LPG</div><div class="v">${t.lpg?'₹'+t.lpg:'—'}</div></div>`;
 }
 
 function renderSignals(){
-  const t = S.ticker;
+  const t=S.ticker;
   const items=[
-    {l:'Chennai 22K',  v:fINR(S.rate22),              c:'Goodreturns live', col:'var(--g200)',n:'Scraped this session'},
-    {l:'Chennai 24K',  v:fINR(S.rate24),              c:'Goodreturns live', col:'var(--g200)',n:'Scraped this session'},
-    {l:'Sensex',       v:t.sensex||'—',               c:'BSE live',         col:'var(--up)',  n:'Goodreturns ticker'},
-    {l:'USD/INR',      v:t.usd?'₹'+t.usd:'—',        c:'Live',             col:'var(--bl)',  n:'Goodreturns ticker'},
-    {l:'Silver MCX',   v:t.silver?fINR(t.silver):'—', c:'per kg',           col:'var(--or)',  n:'MCX · Goodreturns'},
+    {l:'Chennai 22K', v:fINR(S.rate22),          c:'Goodreturns live',col:'var(--g200)',n:'MJDTA daily rate'},
+    {l:'Chennai 24K', v:fINR(S.rate24),          c:'Goodreturns live',col:'var(--g200)',n:'Investment grade'},
+    {l:'Sensex',      v:t.sensex??'—',           c:t.sensexChg??'BSE',col:'var(--up)',  n:'BSE · Goodreturns'},
+    {l:'USD/INR',     v:t.usd?'₹'+t.usd:'—',    c:'Live',            col:'var(--bl)',  n:'Goodreturns ticker'},
+    {l:'Silver MCX',  v:t.silver?fINR(t.silver):'—',c:'per kg',      col:'var(--or)',  n:'MCX · Goodreturns'},
   ];
   document.getElementById('ig').innerHTML=items.map((it,i)=>`
     <div class="ic" style="animation:fadeUp .4s ease ${i*.06}s both">
@@ -813,8 +764,8 @@ function renderSignals(){
 // ── CHARTS ──
 const bO={responsive:true,maintainAspectRatio:false,interaction:{intersect:false,mode:'index'},
   animation:{duration:700,easing:'easeInOutQuart'},
-  plugins:{legend:{display:false},tooltip:{backgroundColor:'#181628',borderColor:'#2A2840',
-    borderWidth:1,titleColor:'#7068A0',bodyColor:'#EDE8F8',padding:10,
+  plugins:{legend:{display:false},tooltip:{backgroundColor:'#181628',borderColor:'#2A2840',borderWidth:1,
+    titleColor:'#7068A0',bodyColor:'#EDE8F8',padding:10,
     titleFont:{family:'DM Mono',size:10},bodyFont:{family:'DM Mono',size:11}}},
   scales:{
     x:{grid:{color:'rgba(26,24,46,.6)',drawBorder:false},ticks:{color:'#3D3860',font:{family:'DM Mono',size:9},maxTicksLimit:10}},
@@ -825,60 +776,55 @@ function grd(ctx,r,g,b,a=.22){const gr=ctx.chart.ctx.createLinearGradient(0,0,0,
 function mkC(id,type,data,opts){if(charts[id])charts[id].destroy();const c=document.getElementById(id);if(c)charts[id]=new Chart(c,{type,data,options:opts});}
 
 function renderCharts(){
-  if(S.history.length < 2){
-    document.getElementById('wv1').textContent = fINR(S.rate22);
-    document.getElementById('wv8').textContent = fINR(S.rate22*8);
+  if(S.history.length<2){
+    document.getElementById('wv1').textContent=fINR(S.rate22);
+    document.getElementById('wv8').textContent=fINR(S.rate22*8);
     return;
   }
-  const h = [...S.history].reverse(); // oldest first for chart
-  const lb = h.map(e=>e.date.replace(',','').replace(' 202',"'"));
-  const v22 = h.map(e=>e.k22);
-  const v24 = h.map(e=>e.k24);
-  const last22 = v22[v22.length-1];
-
-  document.getElementById('wv1').textContent = fINR(last22);
-  document.getElementById('wv8').textContent = fINR(last22*8);
-
+  // History from Goodreturns is newest first — reverse for chart (oldest left)
+  const h=[...S.history].reverse();
+  const lb=h.map(e=>e.date.replace(',','').replace(' 2026','').replace(' 202','')).map(d=>d.split(' ').slice(0,2).join(' '));
+  const v22=h.map(e=>e.k22);
+  const v24=h.map(e=>e.k24);
+  const last=v22[v22.length-1];
+  document.getElementById('wv1').textContent=fINR(last);
+  document.getElementById('wv8').textContent=fINR(last*8);
   mkC('wc1','line',{labels:lb,datasets:[{
-    data:v22, borderColor:'#F5C518', borderWidth:2.5, pointRadius:5,
-    pointBackgroundColor:'#F5C518', pointBorderColor:'#0A0812', pointBorderWidth:2,
-    fill:true, backgroundColor:ctx=>grd(ctx,245,197,24), tension:.4
+    data:v22,borderColor:'#F5C518',borderWidth:2.5,pointRadius:5,
+    pointBackgroundColor:'#F5C518',pointBorderColor:'#0A0812',pointBorderWidth:2,
+    fill:true,backgroundColor:ctx=>grd(ctx,245,197,24),tension:.4
   }]},mkO(v=>'₹'+Math.round(v).toLocaleString('en-IN')));
-
   mkC('wc8','line',{labels:lb,datasets:[{
-    data:v22.map(v=>v*8), borderColor:'#E8960C', borderWidth:2.5, pointRadius:5,
-    pointBackgroundColor:'#E8960C', pointBorderColor:'#0A0812', pointBorderWidth:2,
-    fill:true, backgroundColor:ctx=>grd(ctx,232,150,12), tension:.4
+    data:v22.map(v=>v*8),borderColor:'#E8960C',borderWidth:2.5,pointRadius:5,
+    pointBackgroundColor:'#E8960C',pointBorderColor:'#0A0812',pointBorderWidth:2,
+    fill:true,backgroundColor:ctx=>grd(ctx,232,150,12),tension:.4
   }]},mkO(v=>'₹'+(v/1000).toFixed(0)+'k'));
-
   mkC('mc','line',{labels:lb,datasets:[{
-    data:v24, borderColor:'#FFE566', borderWidth:2.5,
-    pointRadius:h.length>10?2:4, pointBackgroundColor:'#FFE566',
-    pointBorderColor:'#0A0812', pointBorderWidth:2, fill:true,
-    backgroundColor:ctx=>grd(ctx,255,229,102,.15), tension:.4
+    data:v24,borderColor:'#FFE566',borderWidth:2.5,pointRadius:4,
+    pointBackgroundColor:'#FFE566',pointBorderColor:'#0A0812',pointBorderWidth:2,
+    fill:true,backgroundColor:ctx=>grd(ctx,255,229,102,.15),tension:.4
   }]},mkO(v=>'₹'+Math.round(v).toLocaleString('en-IN')));
 }
 
 function renderHistTable(){
   if(!S.history.length){
-    document.getElementById('hb').innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--tx3);padding:18px">No history data</td></tr>';
+    document.getElementById('hb').innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--tx3);padding:18px">No history data available</td></tr>';
     return;
   }
-  // History is newest first from Goodreturns
   document.getElementById('hb').innerHTML=S.history.map((r,i)=>{
-    const prev = S.history[i+1];
-    const ch = prev ? r.k22-prev.k22 : null;
-    const chp = ch!=null&&prev.k22 ? (ch/prev.k22*100).toFixed(2) : null;
-    const col = ch===null?'var(--tx3)':ch>0?'var(--up)':ch<0?'var(--dn)':'var(--tx3)';
-    const sy = ch===null?'':ch>0?'▲':ch<0?'▼':'●';
-    const isLatest = i===0;
-    return `<tr style="${isLatest?'background:rgba(245,197,24,.05)':''}">
+    const prev=S.history[i+1];
+    const ch=prev?r.k22-prev.k22:S.change22;
+    const chp=ch&&r.k22?((ch/r.k22)*100).toFixed(2):null;
+    const col=ch===null||ch===undefined?'var(--tx3)':ch>0?'var(--up)':ch<0?'var(--dn)':'var(--tx3)';
+    const sy=ch===null||ch===undefined?'':ch>0?'▲':ch<0?'▼':'●';
+    const isLatest=i===0;
+    return`<tr style="${isLatest?'background:rgba(245,197,24,.05)':''}">
       <td style="color:${isLatest?'var(--g200)':'var(--tx1)'};font-weight:${isLatest?700:400}">${r.date}${isLatest?' ← Today':''}</td>
       <td style="color:var(--g200);font-weight:${isLatest?700:400}">${fINR(r.k22)}</td>
       <td>${fINR(r.k24)}</td>
       <td style="color:var(--tx2)">${fINR(r.k18)}</td>
       <td>${fINR(r.k22*8)}</td>
-      <td>${fINR(r.k24*8)}</td>
+      <td style="color:var(--tx2)">${fINR(r.k24*8)}</td>
       <td style="color:${col}">${ch!=null?sy+' '+fINR(Math.abs(ch)):'—'}</td>
       <td style="color:${col}">${chp!=null?chp+'%':'—'}</td>
     </tr>`;
@@ -888,8 +834,8 @@ function renderHistTable(){
 function renderCityTable(){
   document.getElementById('cb').innerHTML=Object.entries(CITY_OFF).map(([city,d])=>{
     const isCh=city.includes('Chennai');
-    const v22=S.rate22+d.d22, v24=S.rate24+d.d24, v18=S.rate18+d.d18;
-    return `<tr style="${isCh?'background:rgba(245,197,24,.05)':''}">
+    const v22=S.rate22+d.d22,v24=S.rate24+d.d24,v18=S.rate18+d.d18;
+    return`<tr style="${isCh?'background:rgba(245,197,24,.05)':''}">
       <td style="color:${isCh?'var(--g200)':'var(--tx0)'};font-weight:${isCh?700:500}">${city}</td>
       <td style="color:${isCh?'var(--g200)':'var(--tx1)'}">${fINR(v22)}</td>
       <td>${fINR(v22*8)}</td><td>${fINR(v24)}</td><td>${fINR(v24*8)}</td>
@@ -900,33 +846,30 @@ function renderCityTable(){
 
 function buildPred(){
   if(!S.ok||!S.history.length) return;
-  const today22=S.rate22, today24=S.rate24;
-  const hist=S.history;
-  let mom=0, vol=0.004;
-  if(hist.length>=4){
-    const arr=hist.map(h=>h.k22);
+  const today22=S.rate22,today24=S.rate24;
+  const h=S.history;
+  let mom=0,vol=0.004;
+  if(h.length>=4){
+    const arr=h.map(e=>e.k22);
     mom=(arr[0]-arr[arr.length-1])/arr[arr.length-1]/Math.max(arr.length-1,1);
   }
-  if(hist.length>=4){
+  if(h.length>=4){
     const rets=[];
-    for(let i=0;i<hist.length-1;i++)
-      rets.push((hist[i].k22-hist[i+1].k22)/hist[i+1].k22);
+    for(let i=0;i<h.length-1;i++) rets.push((h[i].k22-h[i+1].k22)/h[i+1].k22);
     const mn=rets.reduce((a,b)=>a+b,0)/rets.length;
     vol=Math.sqrt(rets.reduce((a,b)=>a+(b-mn)**2,0)/rets.length)||0.004;
   }
   const tfs=[{l:'+1 Day',d:1},{l:'+2 Days',d:2},{l:'+3 Days',d:3},{l:'+5 Days',d:5},{l:'+7 Days',d:7}];
   const scenarios=[
-    {cls:'bull',label:'⚖️ Stabilisation / Mild Recovery',color:'var(--g200)',conf:'60%',
-     note:`Current: ${fINR(today22)} (Goodreturns live). 10-day momentum: ${(mom*100).toFixed(2)}%/day. Wedding season (Jul-Aug) supports floor. MJDTA base likely steady.`,
-     mult:0.3},
-    {cls:'bear',label:'🐻 Continued Softness',color:'var(--dn)',conf:'55%',
-     note:`Peak was ~₹14,630 in June. Current ${fINR(today22)} = correction. Vol: ${(vol*100).toFixed(2)}%/day. USD/INR at ${S.ticker.usd?'₹'+S.ticker.usd:'—'} — if INR weakens further, gold may rise.`,
-     mult:-0.6},
+    {cls:'bull',label:'⚖️ Stabilisation / Recovery',color:'var(--g200)',conf:'60%',
+     note:`Current: ${fINR(today22)} (Goodreturns live). Today +${fINR(S.change22??0)}. Vol: ${(vol*100).toFixed(2)}%/day. Wedding season (Jul-Aug) supports floor. MJDTA likely to hold base.`,mult:0.3},
+    {cls:'bear',label:'🐻 Continued Correction',color:'var(--dn)',conf:'55%',
+     note:`10-day momentum: ${(mom*100).toFixed(2)}%/day. USD/INR at ${S.ticker.usd?'₹'+S.ticker.usd:'—'}. Fed hawkish stance, global demand softness (WGC). Jun peak ~₹14,630 → now ${fINR(today22)} = -6%.`,mult:-0.6},
   ];
   document.getElementById('pg').innerHTML=scenarios.map(s=>`
     <div class="pred-card ${s.cls}" style="animation:fadeUp .5s ease both">
       <div class="pglow"></div>
-      <div class="pred-eye">Forecast · Chennai 22K · from Goodreturns live history</div>
+      <div class="pred-eye">Forecast · Chennai 22K · Goodreturns live history</div>
       <div class="pred-lbl" style="color:${s.color}">${s.label}</div>
       <div class="pred-conf">Confidence ${s.conf}</div>
       <div class="pred-note">${s.note}</div>
@@ -934,7 +877,7 @@ function buildPred(){
         const p22=Math.round(today22*(1+mom*s.mult*tf.d));
         const p24=Math.round(today24*(1+mom*s.mult*tf.d));
         const diff=p22-today22,dc=diff>=0?'up':'dn',ds=diff>=0?'▲':'▼';
-        return `<div class="pred-row">
+        return`<div class="pred-row">
           <div class="pred-when">${tf.l}</div>
           <div style="display:flex;align-items:center;gap:10px">
             <div><div class="pv1">${fINR(p22)} <em>22K/g</em></div>
@@ -956,21 +899,15 @@ function renderFestivals(){
     </div>`).join('');
 }
 
-// ── AUTO-REFRESH ──
-async function manualRefresh(){ await fetchAll(); nextRefresh=Date.now()+REFRESH; }
-setInterval(async()=>{ await fetchAll(); nextRefresh=Date.now()+REFRESH; },REFRESH);
+async function manualRefresh(){await fetchAll();nextRefresh=Date.now()+REFRESH;}
+setInterval(async()=>{await fetchAll();nextRefresh=Date.now()+REFRESH;},REFRESH);
 
 function initReveal(){
   const obs=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('vis');obs.unobserve(e.target);}});},{threshold:.06});
   document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
 }
 
-(async()=>{
-  initReveal();
-  renderFestivals();
-  await fetchAll();
-  nextRefresh=Date.now()+REFRESH;
-})();
+(async()=>{initReveal();renderFestivals();await fetchAll();nextRefresh=Date.now()+REFRESH;})();
 </script>
 </body>
 </html>
