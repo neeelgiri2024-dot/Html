@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nightlull — Cry Sound Reader</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Karla:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink: #F4F1EA00; /* unused placeholder to avoid confusion */
+    --bg-0: #171A31;
+    --bg-1: #1F2444;
+    --panel: #232951;
+    --panel-edge: #333a67;
+    --text-hi: #F3EFE7;
+    --text-lo: #B7B9D6;
+    --lav: #8B93E8;
+    --rose: #E7A2A2;
+    --gold: #F0C987;
+    --sage: #9FCBB0;
+    --radius: 22px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(ellipse 900px 500px at 15% -10%, #2b316020, transparent),
+      radial-gradient(ellipse 700px 600px at 100% 10%, #E7A2A214, transparent),
+      var(--bg-0);
+    color:var(--text-hi);
+    font-family:'Karla', sans-serif;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:760px;margin:0 auto;padding:48px 22px 90px;}
+
+  /* ---------- Hero ---------- */
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--gold);
+    display:flex;align-items:center;gap:10px;
+    margin-bottom:18px;
+  }
+  .eyebrow::before{
+    content:"";
+    width:7px;height:7px;border-radius:50%;
+    background:var(--gold);
+    box-shadow:0 0 0 0 rgba(240,201,135,.6);
+    animation:pulseDot 2.4s infinite;
+  }
+  @keyframes pulseDot{
+    0%{box-shadow:0 0 0 0 rgba(240,201,135,.55);}
+    70%{box-shadow:0 0 0 9px rgba(240,201,135,0);}
+    100%{box-shadow:0 0 0 0 rgba(240,201,135,0);}
+  }
+  h1{
+    font-family:'Fraunces', serif;
+    font-weight:500;
+    font-size:clamp(34px,6vw,52px);
+    line-height:1.05;
+    margin:0 0 14px;
+    letter-spacing:-.01em;
+  }
+  h1 em{font-style:italic;color:var(--rose);font-weight:400;}
+  .sub{
+    color:var(--text-lo);
+    font-size:16.5px;
+    line-height:1.6;
+    max-width:52ch;
+    margin:0 0 40px;
+  }
+
+  /* ---------- Listener ring (signature element) ---------- */
+  .listener{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:22px;
+    padding:38px 20px 30px;
+    background:linear-gradient(180deg, var(--panel), #1c2143);
+    border:1px solid var(--panel-edge);
+    border-radius:var(--radius);
+    margin-bottom:28px;
+  }
+  .ring-stage{
+    position:relative;
+    width:220px;height:220px;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .ring-stage svg{position:absolute;inset:0;width:100%;height:100%;}
+  .ripple{
+    fill:none;
+    stroke:var(--lav);
+    stroke-width:1.2;
+    opacity:0;
+    transform-origin:center;
+  }
+  .ripple.active{animation:ripple 2.6s ease-out infinite;}
+  .ripple.active:nth-child(2){animation-delay:.9s;}
+  .ripple.active:nth-child(3){animation-delay:1.8s;}
+  @keyframes ripple{
+    0%{opacity:.55; transform:scale(.55);}
+    100%{opacity:0; transform:scale(1.05);}
+  }
+  #mic-btn{
+    position:relative;
+    z-index:2;
+    width:118px;height:118px;
+    border-radius:50%;
+    border:none;
+    cursor:pointer;
+    background:radial-gradient(circle at 35% 30%, #9aa2f0, var(--lav) 70%);
+    box-shadow:0 10px 30px -8px rgba(139,147,232,.55);
+    color:#171A31;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  #mic-btn:hover{transform:scale(1.03);}
+  #mic-btn:active{transform:scale(.97);}
+  #mic-btn.recording{
+    background:radial-gradient(circle at 35% 30%, #f0aeae, var(--rose) 70%);
+    box-shadow:0 10px 34px -6px rgba(231,162,162,.6);
+  }
+  #mic-btn svg{width:26px;height:26px;}
+  .status-line{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12.5px;
+    color:var(--text-lo);
+    min-height:18px;
+    text-align:center;
+  }
+  .status-line .t{color:var(--gold);}
+
+  .readout{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:10px;
+    width:100%;
+    max-width:420px;
+    opacity:0;
+    max-height:0;
+    overflow:hidden;
+    transition:opacity .35s ease, max-height .35s ease, margin .35s ease;
+  }
+  .readout.show{opacity:1;max-height:90px;margin-top:4px;}
+  .readout div{
+    background:#1a1e3c;
+    border:1px solid var(--panel-edge);
+    border-radius:12px;
+    padding:10px 8px;
+    text-align:center;
+  }
+  .readout .k{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text-lo);letter-spacing:.05em;text-transform:uppercase;}
+  .readout .v{font-family:'IBM Plex Mono',monospace;font-size:15px;color:var(--sage);margin-top:3px;}
+
+  /* ---------- Results ---------- */
+  .results{display:none;flex-direction:column;gap:14px;margin-bottom:34px;}
+  .results.show{display:flex;}
+  .result-card{
+    background:var(--panel);
+    border:1px solid var(--panel-edge);
+    border-radius:var(--radius);
+    padding:26px 26px 22px;
+  }
+  .result-top{display:flex;align-items:baseline;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:6px;}
+  .result-top h2{
+    font-family:'Fraunces',serif;
+    font-weight:500;
+    font-size:26px;
+    margin:0;
+  }
+  .conf{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--gold);}
+  .result-desc{color:var(--text-lo);font-size:15px;line-height:1.6;margin:8px 0 16px;}
+  .try-list{margin:0;padding-left:18px;color:var(--text-hi);font-size:14.5px;line-height:1.85;}
+  .try-list li::marker{color:var(--rose);}
+
+  .score-bars{display:flex;flex-direction:column;gap:9px;margin-top:6px;}
+  .score-row{display:grid;grid-template-columns:120px 1fr 40px;align-items:center;gap:10px;}
+  .score-row .lbl{font-size:12.5px;color:var(--text-lo);}
+  .score-track{height:7px;border-radius:5px;background:#1a1e3c;overflow:hidden;}
+  .score-fill{height:100%;border-radius:5px;background:linear-gradient(90deg,var(--lav),var(--rose));width:0%;transition:width .8s cubic-bezier(.2,.7,.3,1);}
+  .score-pct{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text-lo);text-align:right;}
+
+  .again-btn{
+    align-self:flex-start;
+    margin-top:4px;
+    background:none;
+    border:1px solid var(--panel-edge);
+    color:var(--text-hi);
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    letter-spacing:.04em;
+    padding:9px 16px;
+    border-radius:100px;
+    cursor:pointer;
+    text-transform:uppercase;
+  }
+  .again-btn:hover{border-color:var(--lav);color:var(--lav);}
+
+  /* ---------- Guide ---------- */
+  .guide{margin-top:8px;}
+  .guide h3{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    color:var(--text-lo);
+    margin:0 0 16px;
+  }
+  .guide-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  @media(max-width:560px){.guide-grid{grid-template-columns:1fr;}}
+  .guide-card{
+    border:1px solid var(--panel-edge);
+    border-radius:16px;
+    padding:16px 18px;
+    background:#1b1f3d;
+  }
+  .guide-card .name{
+    font-family:'Fraunces',serif;
+    font-size:17px;
+    margin:0 0 6px;
+    color:var(--text-hi);
+  }
+  .guide-card .desc{font-size:13.5px;color:var(--text-lo);line-height:1.6;margin:0;}
+
+  footer{
+    margin-top:52px;
+    padding-top:22px;
+    border-top:1px solid var(--panel-edge);
+    font-size:12.5px;
+    color:var(--text-lo);
+    line-height:1.7;
+  }
+  footer b{color:var(--text-hi);}
+
+  .err{
+    background:#3a2130;
+    border:1px solid #6b3550;
+    color:#f0c2d4;
+    padding:14px 16px;
+    border-radius:12px;
+    font-size:13.5px;
+    margin-bottom:22px;
+    display:none;
+  }
+  .err.show{display:block;}
+
+  @media (prefers-reduced-motion: reduce){
+    .ripple.active{animation:none;opacity:.2;}
+    .eyebrow::before{animation:none;}
+    .score-fill{transition:none;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow">listening tool · not a diagnosis</div>
+  <h1>What is she<br><em>trying to say?</em></h1>
+  <p class="sub">Nightlull listens to a cry for a few seconds and reads its pitch, rhythm, and texture — the same cues pediatric nurses learn to notice — then offers its best guess at what's underneath it.</p>
+
+  <div class="err" id="err"></div>
+
+  <div class="listener">
+    <div class="ring-stage">
+      <svg viewBox="0 0 220 220">
+        <circle class="ripple" id="r1" cx="110" cy="110" r="58"/>
+        <circle class="ripple" id="r2" cx="110" cy="110" r="58"/>
+        <circle class="ripple" id="r3" cx="110" cy="110" r="58"/>
+      </svg>
+      <button id="mic-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+        <span id="mic-label">Listen</span>
+      </button>
+    </div>
+    <div class="status-line" id="status">Tap to record <span class="t">8 seconds</span> of crying, held a hand's width from her.</div>
+    <div class="readout" id="readout">
+      <div><div class="k">Pitch</div><div class="v" id="ro-pitch">–</div></div>
+      <div><div class="k">Loudness</div><div class="v" id="ro-energy">–</div></div>
+      <div><div class="k">Rhythm</div><div class="v" id="ro-rhythm">–</div></div>
+    </div>
+  </div>
+
+  <div class="results" id="results">
+    <div class="result-card" id="primary-card">
+      <div class="result-top">
+        <h2 id="res-title">–</h2>
+        <span class="conf" id="res-conf">– confidence</span>
+      </div>
+      <p class="result-desc" id="res-desc"></p>
+      <ul class="try-list" id="res-try"></ul>
+    </div>
+    <div class="result-card">
+      <div class="score-bars" id="score-bars"></div>
+      <button class="again-btn" id="again-btn">Listen again</button>
+    </div>
+  </div>
+
+  <div class="guide">
+    <h3>Five cries worth learning by ear</h3>
+    <div class="guide-grid">
+      <div class="guide-card"><p class="name">Hungry</p><p class="desc">Short, rhythmic, low-pitched, and repetitive — builds gradually and pauses like it's waiting for a reply. Often paired with rooting or hand-to-mouth.</p></div>
+      <div class="guide-card"><p class="name">Tired</p><p class="desc">A whiny, nasal whimper that rises and falls unevenly, mixed with fussing, yawns, and eye-rubbing. Loses steam rather than building.</p></div>
+      <div class="guide-card"><p class="name">Discomfort</p><p class="desc">Fretful and intermittent — a wet diaper, an itchy tag, or too much noise and light. Stop-start, irritable, easing when the cause is fixed.</p></div>
+      <div class="guide-card"><p class="name">Pain</p><p class="desc">Sudden onset with no warm-up: a sharp, high-pitched shriek, then a breath-holding pause, then another shriek. Distinctly more intense than routine fussing.</p></div>
+      <div class="guide-card"><p class="name">Gas / colic</p><p class="desc">Tense, clenched-up crying that builds in intensity, often with legs pulled to the belly and a red face. Can be prolonged and hard to soothe.</p></div>
+      <div class="guide-card"><p class="name">Attention / boredom</p><p class="desc">Starts and stops almost on cue, softens the moment she's picked up, and often includes pauses to check who's listening.</p></div>
+    </div>
+  </div>
+
+  <footer>
+    <b>Read this before you trust the ring.</b> Nightlull estimates a cry's pitch, loudness, and rhythm from your microphone and matches the pattern to categories described in infant-cry research — it is a listening aid, not a medical device, and it cannot diagnose pain, illness, or any condition. It will make mistakes. If crying is inconsolable, unusual for her, or paired with fever, vomiting, a rash, or lethargy, trust your judgment over this tool and call your pediatrician or emergency services. Audio is analyzed on this device only and is never uploaded or stored.
+  </footer>
+
+</div>
+
+<script>
+(function(){
+  const micBtn = document.getElementById('mic-btn');
+  const micLabel = document.getElementById('mic-label');
+  const statusEl = document.getElementById('status');
+  const readout = document.getElementById('readout');
+  const roPitch = document.getElementById('ro-pitch');
+  const roEnergy = document.getElementById('ro-energy');
+  const roRhythm = document.getElementById('ro-rhythm');
+  const ripples = [document.getElementById('r1'), document.getElementById('r2'), document.getElementById('r3')];
+  const resultsEl = document.getElementById('results');
+  const resTitle = document.getElementById('res-title');
+  const resConf = document.getElementById('res-conf');
+  const resDesc = document.getElementById('res-desc');
+  const resTry = document.getElementById('res-try');
+  const scoreBars = document.getElementById('score-bars');
+  const againBtn = document.getElementById('again-btn');
+  const errEl = document.getElementById('err');
+
+  const RECORD_MS = 8000;
+  let audioCtx, analyser, source, stream, dataArray, timeArray;
+  let recording = false;
+  let frames = []; // {rms, pitch, centroid, zcr, t}
+  let rafId;
+  let startTime;
+
+  function showError(msg){
+    errEl.textContent = msg;
+    errEl.classList.add('show');
+  }
+  function clearError(){ errEl.classList.remove('show'); errEl.textContent=''; }
+
+  micBtn.addEventListener('click', () => {
+    if (recording) return;
+    startListening();
+  });
+  againBtn.addEventListener('click', () => {
+    resultsEl.classList.remove('show');
+    readout.classList.remove('show');
+    statusEl.innerHTML = 'Tap to record <span class="t">8 seconds</span> of crying, held a hand\'s width from her.';
+  });
+
+  async function startListening(){
+    clearError();
+    resultsEl.classList.remove('show');
+    try{
+      stream = await navigator.mediaDevices.getUserMedia({ audio: {
+        echoCancellation:false, noiseSuppression:false, autoGainControl:false
+      }});
+    }catch(e){
+      showError('Could not access the microphone. Check your browser\'s microphone permission for this page and try again.');
+      return;
+    }
+
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    source = audioCtx.createMediaStreamSource(stream);
+    analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 2048;
+    analyser.smoothingTimeConstant = 0;
+    source.connect(analyser);
+
+    dataArray = new Uint8Array(analyser.frequencyBinCount);
+    timeArray = new Float32Array(analyser.fftSize);
+
+    frames = [];
+    recording = true;
+    startTime = performance.now();
+
+    micBtn.classList.add('recording');
+    micLabel.textContent = 'Stop';
+    micBtn.querySelector('svg').style.display='none';
+    ripples.forEach(r => r.classList.add('active'));
+    readout.classList.add('show');
+    statusEl.innerHTML = 'Listening… <span class="t">recording</span>';
+
+    micBtn.onclick = stopListening;
+
+    tick();
+
+    setTimeout(() => { if (recording) stopListening(); }, RECORD_MS);
+  }
+
+  function tick(){
+    if (!recording) return;
+    analyser.getFloatTimeDomainData(timeArray);
+    analyser.getByteFrequencyData(dataArray);
+
+    const rms = computeRMS(timeArray);
+    const pitch = estimatePitch(timeArray, audioCtx.sampleRate);
+    const centroid = computeCentroid(dataArray, audioCtx.sampleRate);
+    const zcr = computeZCR(timeArray);
+    const t = (performance.now() - startTime)/1000;
+
+    frames.push({ rms, pitch, centroid, zcr, t });
+
+    // live readout (rolling)
+    const recent = frames.slice(-8);
+    const avgPitch = average(recent.filter(f=>f.pitch>0).map(f=>f.pitch));
+    const avgRms = average(recent.map(f=>f.rms));
+    roPitch.textContent = avgPitch ? Math.round(avgPitch) + ' Hz' : '–';
+    roEnergy.textContent = avgRms ? (avgRms*100).toFixed(0) + '%' : '–';
+    roRhythm.textContent = avgRms > 0.02 ? 'active' : 'quiet';
+
+    rafId = requestAnimationFrame(tick);
+  }
+
+  function stopListening(){
+    recording = false;
+    cancelAnimationFrame(rafId);
+    ripples.forEach(r => r.classList.remove('active'));
+    micBtn.classList.remove('recording');
+    micLabel.textContent = 'Listen';
+    micBtn.querySelector('svg').style.display='';
+    micBtn.onclick = () => { if(!recording) startListening(); };
+    statusEl.textContent = 'Analyzing…';
+
+    if (stream) stream.getTracks().forEach(tr => tr.stop());
+    if (audioCtx) audioCtx.close();
+
+    setTimeout(() => analyze(), 300);
+  }
+
+  // ---------- DSP helpers ----------
+  function computeRMS(buf){
+    let sum = 0;
+    for (let i=0;i<buf.length;i++) sum += buf[i]*buf[i];
+    return Math.sqrt(sum/buf.length);
+  }
+  function computeZCR(buf){
+    let count = 0;
+    for (let i=1;i<buf.length;i++){
+      if ((buf[i-1] >= 0) !== (buf[i] >= 0)) count++;
+    }
+    return count / buf.length;
+  }
+  function computeCentroid(freqData, sampleRate){
+    let num=0, den=0;
+    const nyquist = sampleRate/2;
+    for (let i=0;i<freqData.length;i++){
+      const mag = freqData[i];
+      const freq = (i/freqData.length) * nyquist;
+      num += freq*mag;
+      den += mag;
+    }
+    return den > 0 ? num/den : 0;
+  }
+  // autocorrelation pitch detection, tuned for infant cry range (250-600Hz typical, up to 2000Hz screams)
+  function estimatePitch(buf, sampleRate){
+    const SIZE = buf.length;
+    let rms = computeRMS(buf);
+    if (rms < 0.01) return -1; // too quiet
+
+    let r1=0, r2=SIZE-1, thresh=0.2;
+    for (let i=0; i<SIZE/2; i++){ if (Math.abs(buf[i])<thresh){ r1=i; break; } }
+    for (let i=1; i<SIZE/2; i++){ if (Math.abs(buf[SIZE-i])<thresh){ r2=SIZE-i; break; } }
+    const trimmed = buf.slice(r1, r2);
+    const n = trimmed.length;
+
+    const c = new Array(n).fill(0);
+    for (let lag=0; lag<n; lag++){
+      let sum=0;
+      for (let i=0; i<n-lag; i++) sum += trimmed[i]*trimmed[i+lag];
+      c[lag]=sum;
+    }
+    let d=0; while (d<n-1 && c[d]>c[d+1]) d++;
+    let maxVal=-1, maxPos=-1;
+    for (let i=d; i<n; i++){
+      if (c[i]>maxVal){ maxVal=c[i]; maxPos=i; }
+    }
+    let T0 = maxPos;
+    if (T0<=0) return -1;
+    const freq = sampleRate/T0;
+    if (freq < 150 || freq > 2200) return -1; // outside plausible infant cry fundamental range
+    return freq;
+  }
+
+  function average(arr){
+    if (!arr.length) return 0;
+    return arr.reduce((a,b)=>a+b,0)/arr.length;
+  }
+  function stddev(arr){
+    if (arr.length<2) return 0;
+    const m = average(arr);
+    return Math.sqrt(average(arr.map(v=>(v-m)*(v-m))));
+  }
+
+  // ---------- Analysis / classification ----------
+  function analyze(){
+    const voiced = frames.filter(f => f.pitch > 0);
+    const loud = frames.filter(f => f.rms > 0.015);
+
+    if (loud.length < frames.length * 0.15){
+      showError('That came through mostly quiet — try again a little closer, or wait for the next cry.');
+      statusEl.innerHTML = 'Tap to record <span class="t">8 seconds</span> of crying, held a hand\'s width from her.';
+      return;
+    }
+
+    const avgPitch = average(voiced.map(f=>f.pitch)) || 0;
+    const pitchVar = stddev(voiced.map(f=>f.pitch));
+    const avgRms = average(frames.map(f=>f.rms));
+    const rmsVar = stddev(frames.map(f=>f.rms));
+    const avgCentroid = average(frames.map(f=>f.centroid));
+    const avgZcr = average(frames.map(f=>f.zcr));
+
+    // rhythm: count bursts (energy above threshold) and gaps
+    const thresh = Math.max(0.02, avgRms*0.5);
+    let bursts = 0, inBurst=false, burstDurations=[], gapDurations=[];
+    let burstStart=0, gapStart=0;
+    frames.forEach((f,i)=>{
+      const on = f.rms > thresh;
+      if (on && !inBurst){ inBurst=true; bursts++; burstStart=f.t; if(i>0) gapDurations.push(f.t-gapStart); }
+      if (!on && inBurst){ inBurst=false; gapStart=f.t; burstDurations.push(f.t-burstStart); }
+    });
+    const avgBurst = average(burstDurations);
+    const avgGap = average(gapDurations);
+    const burstRate = bursts / (RECORD_MS/1000);
+
+    // update live readout with final rhythm word
+    roPitch.textContent = avgPitch ? Math.round(avgPitch)+' Hz' : '–';
+    roEnergy.textContent = (avgRms*100).toFixed(0)+'%';
+    roRhythm.textContent = burstRate > 0.9 ? 'choppy' : (burstRate < 0.4 ? 'sustained' : 'steady');
+
+    // ---- heuristic scoring across categories ----
+    const scores = { Hungry:0, Tired:0, Discomfort:0, Pain:0, 'Gas / colic':0, 'Attention / boredom':0 };
+
+    // Pitch cues
+    if (avgPitch > 700) { scores.Pain += 3; scores['Gas / colic'] += 1; }
+    else if (avgPitch > 500) { scores.Pain += 1.5; scores['Gas / colic'] += 1.5; }
+    else if (avgPitch > 380) { scores.Hungry += 2; scores['Gas / colic'] += 0.5; }
+    else if (avgPitch > 0) { scores.Tired += 1.5; scores.Discomfort += 1; }
+
+    if (pitchVar > 150) { scores.Discomfort += 1.5; scores['Attention / boredom'] += 1; }
+    if (pitchVar < 60 && avgPitch>0) { scores.Hungry += 1.5; }
+
+    // Loudness / energy
+    if (avgRms > 0.12) { scores.Pain += 2; scores['Gas / colic'] += 1; }
+    if (avgRms < 0.05) { scores.Tired += 1.5; scores['Attention / boredom'] += 1; }
+    if (rmsVar > 0.05) { scores.Discomfort += 1; scores['Attention / boredom'] += 0.5; }
+
+    // Rhythm cues
+    if (burstRate >= 0.9) { scores.Hungry += 2; scores.Discomfort += 1; }
+    if (burstRate < 0.35) { scores.Pain += 1.5; scores['Gas / colic'] += 1.5; }
+    if (avgGap > 1.2 && avgBurst>0) { scores.Pain += 1.5; }
+    if (avgBurst > 0 && avgBurst < 0.8 && burstRate>0.7) { scores['Attention / boredom'] += 1.5; }
+
+    // Spectral texture (centroid/zcr as harshness proxy)
+    if (avgCentroid > 1500) { scores.Pain += 1; scores['Gas / colic'] += 0.5; }
+    if (avgZcr > 0.18) { scores['Gas / colic'] += 1; scores.Discomfort += 0.5; }
+
+    // slight base so nothing is zero
+    Object.keys(scores).forEach(k => scores[k] += 0.4);
+
+    const total = Object.values(scores).reduce((a,b)=>a+b,0);
+    const ranked = Object.entries(scores)
+      .map(([k,v]) => [k, v/total])
+      .sort((a,b) => b[1]-a[1]);
+
+    renderResults(ranked, { avgPitch, avgRms, burstRate });
+  }
+
+  const COPY = {
+    'Hungry': {
+      desc: "The rhythm here is what stands out — short, evenly spaced cries with real pauses in between, like she's giving you a chance to respond. That steady, repetitive pattern is the clearest hunger signal.",
+      tries: ["Look for early hunger cues (rooting, hands to mouth) before the next cry ramps up.", "Offer a feed and see if the cry breaks quickly — hunger cries usually stop almost the moment feeding starts.", "If it's been under an hour since her last feed, consider other causes first."]
+    },
+    'Tired': {
+      desc: "The pitch drifted and softened rather than staying sharp, and the energy behind it stayed relatively low — more of a whine building into fussiness than a full cry. That pattern often shows up when a baby is fighting sleep.",
+      tries: ["Watch for yawning, eye-rubbing, or a glazed stare.", "Move to a dim, quiet space and start your usual wind-down routine.", "Avoid more stimulation — new toys or games tend to backfire here."]
+    },
+    'Discomfort': {
+      desc: "This one was uneven — starting and stopping, with the pitch and volume both wandering rather than settling into one clear pattern. That irritable, inconsistent shape usually points to something fixable rather than something serious.",
+      tries: ["Check the diaper, clothing tags, temperature of the room, and swaddle tightness.", "Look for hair tourniquets around fingers or toes if the cry is sudden and sharp.", "Once the irritant is removed, this type of cry usually settles within a couple of minutes."]
+    },
+    'Pain': {
+      desc: "This cry came on suddenly and hit high pitch and volume fast, without the gradual build-up you'd expect from routine fussing — and the pauses in between sounded like breath-holding rather than a natural rhythm. That combination is worth taking seriously.",
+      tries: ["Check for anything physically causing pain: a pinch, a bite, an injury, a fever.", "If it doesn't ease with comforting and repeats over the next while, contact your pediatrician.", "Trust your instincts here more than this tool — you know her normal cry."]
+    },
+    'Gas / colic': {
+      desc: "The sound stayed tense and sustained rather than breaking into clear pauses, which fits the clenched, can't-quite-relieve-it quality of gas or colic discomfort.",
+      tries: ["Try bicycle-kicking her legs or a gentle tummy massage.", "Burp her again, even if you already tried once.", "If crying is prolonged, occurs most evenings, and is hard to console, mention colic to your pediatrician."]
+    },
+    'Attention / boredom': {
+      desc: "The cry started and stopped in short, almost testing bursts, without the sustained intensity of hunger or pain — the kind of pattern that often eases the moment she's picked up or spoken to.",
+      tries: ["Make eye contact and talk to her before assuming something's wrong.", "A change of scenery or position is often all it takes.", "This isn't 'spoiling' her — responding builds trust at this age."]
+    }
+  };
+
+  function renderResults(ranked, feats){
+    const [topKey, topScore] = ranked[0];
+    const copy = COPY[topKey];
+
+    resTitle.textContent = topKey;
+    resConf.textContent = Math.round(topScore*100) + '% confidence';
+    resDesc.textContent = copy.desc;
+    resTry.innerHTML = '';
+    copy.tries.forEach(t => {
+      const li = document.createElement('li');
+      li.textContent = t;
+      resTry.appendChild(li);
+    });
+
+    scoreBars.innerHTML = '';
+    ranked.forEach(([k,v]) => {
+      const row = document.createElement('div');
+      row.className='score-row';
+      row.innerHTML = `
+        <div class="lbl">${k}</div>
+        <div class="score-track"><div class="score-fill" style="width:0%" data-w="${Math.round(v*100)}"></div></div>
+        <div class="score-pct">${Math.round(v*100)}%</div>
+      `;
+      scoreBars.appendChild(row);
+    });
+
+    resultsEl.classList.add('show');
+    statusEl.innerHTML = 'Tap to record <span class="t">8 seconds</span> of crying, held a hand\'s width from her.';
+
+    requestAnimationFrame(() => {
+      document.querySelectorAll('.score-fill').forEach(el => {
+        el.style.width = el.dataset.w + '%';
+      });
+    });
+
+    resultsEl.scrollIntoView({ behavior:'smooth', block:'nearest' });
+  }
+})();
+</script>
+</body>
+</html>
