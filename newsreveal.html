@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>A Little Adventure is Coming...</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+/* ============================================================
+   ⚙️  PARTY CONFIG — edit the block in <script> at the bottom
+       tagged "CONFIG" to set your names, date, and secret words.
+   ============================================================ */
+:root{
+  --ink:#2C2140;
+  --night-1:#1B1436;
+  --night-2:#2E2350;
+  --gold:#F4C95D;
+  --gold-2:#E0A93C;
+  --cream:#FFF8EC;
+  --blush:#F2A9A5;
+  --mint:#8FD8C8;
+  --boy:#6FA8DC;
+  --boy-dark:#3D6FA8;
+  --girl:#F2A0C3;
+  --girl-dark:#C9558B;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{
+  margin:0; padding:0; width:100%; height:100%; overflow:hidden;
+  background: radial-gradient(ellipse at 50% 20%, var(--night-2) 0%, var(--night-1) 70%);
+  font-family:'Quicksand', sans-serif; color:var(--ink);
+}
+#bg-canvas{ position:fixed; inset:0; width:100%; height:100%; display:block; }
+
+h1,h2,h3,.display{ font-family:'Baloo 2', cursive; }
+
+#ui-layer{ position:fixed; inset:0; pointer-events:none; z-index:10; }
+.panel{
+  position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+  background:var(--cream);
+  border-radius:26px;
+  padding:28px 24px 24px;
+  width:min(90vw, 420px);
+  max-height:82vh; overflow-y:auto;
+  box-shadow:0 20px 60px rgba(0,0,0,.45), 0 0 0 3px var(--gold) inset;
+  pointer-events:auto;
+  text-align:center;
+  opacity:0; visibility:hidden;
+  transition:opacity .45s ease, transform .45s ease;
+}
+.panel.show{ opacity:1; visibility:visible; transform:translate(-50%,-50%) scale(1); }
+.panel.hide-pop{ transform:translate(-50%,-50%) scale(.85); }
+
+.eyebrow{
+  display:inline-block; font-family:'Baloo 2'; font-weight:700; letter-spacing:.14em;
+  font-size:.72rem; color:var(--gold-2); background:rgba(244,201,93,.16);
+  padding:5px 14px; border-radius:999px; margin-bottom:10px; text-transform:uppercase;
+}
+.panel h2{ margin:2px 0 8px; font-size:1.5rem; color:var(--ink); }
+.panel p{ margin:0 0 14px; line-height:1.5; font-size:.98rem; color:#5b4f70; }
+.riddle-text{ font-style:italic; color:var(--ink); background:rgba(111,168,220,.08); border-left:4px solid var(--gold); padding:10px 14px; border-radius:10px; text-align:left; }
+
+input[type=text]{
+  width:100%; padding:12px 14px; border-radius:14px; border:2px solid #e7ddc8;
+  font-family:'Quicksand'; font-weight:600; font-size:1rem; text-align:center;
+  outline:none; background:#fff; color:var(--ink); margin-bottom:10px;
+}
+input[type=text]:focus{ border-color:var(--gold-2); }
+
+.btn{
+  font-family:'Baloo 2'; font-weight:700; font-size:1rem; letter-spacing:.02em;
+  border:none; border-radius:999px; padding:12px 26px; cursor:pointer;
+  background:linear-gradient(180deg, var(--gold) 0%, var(--gold-2) 100%);
+  color:#3d2b12; box-shadow:0 8px 18px rgba(224,169,60,.4);
+  transition:transform .15s ease, box-shadow .15s ease;
+}
+.btn:hover{ transform:translateY(-2px); box-shadow:0 12px 22px rgba(224,169,60,.5); }
+.btn:active{ transform:translateY(0px) scale(.97); }
+.btn.ghost{ background:transparent; color:#8a7c9c; box-shadow:none; font-size:.85rem; padding:8px 14px; }
+.btn.boy{ background:linear-gradient(180deg, var(--boy) 0%, var(--boy-dark) 100%); color:#fff; }
+.btn.girl{ background:linear-gradient(180deg, var(--girl) 0%, var(--girl-dark) 100%); color:#fff; }
+
+.msg{ font-size:.85rem; min-height:20px; margin-top:6px; font-weight:700; }
+.msg.err{ color:#c1554b; }
+.msg.ok{ color:#3f9c6d; }
+
+/* memory game */
+.mem-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin:12px 0 16px; }
+.mem-card{
+  aspect-ratio:1/1; border-radius:12px; background:linear-gradient(160deg,#6a5a8c,#463869);
+  display:flex; align-items:center; justify-content:center; font-size:1.5rem;
+  cursor:pointer; user-select:none; transform:rotateY(0deg); transition:transform .3s ease, background .3s ease;
+  color:transparent;
+}
+.mem-card.flipped, .mem-card.matched{ background:var(--cream); border:2px solid var(--gold); color:var(--ink); }
+.mem-card.matched{ opacity:.55; cursor:default; }
+
+/* progress dots */
+#progress{
+  position:fixed; top:18px; left:50%; transform:translateX(-50%);
+  display:flex; gap:10px; z-index:20; pointer-events:none;
+}
+.dot{ width:11px; height:11px; border-radius:50%; background:rgba(255,255,255,.25); border:2px solid rgba(255,255,255,.35); transition:background .4s, border-color .4s; }
+.dot.done{ background:var(--gold); border-color:var(--gold); }
+.dot.active{ border-color:var(--gold); box-shadow:0 0 10px var(--gold); }
+
+#hint-btn{
+  position:fixed; bottom:18px; right:18px; z-index:20; pointer-events:auto;
+  width:46px; height:46px; border-radius:50%; border:none; cursor:pointer;
+  background:var(--cream); font-size:1.2rem; box-shadow:0 6px 16px rgba(0,0,0,.35);
+}
+
+/* confetti */
+.confetti-piece{ position:fixed; top:-20px; z-index:15; pointer-events:none; border-radius:2px; }
+
+/* intro / thanks full screens */
+.fullscreen{
+  position:fixed; inset:0; display:flex; align-items:center; justify-content:center;
+  flex-direction:column; text-align:center; z-index:30; padding:28px;
+  background:radial-gradient(ellipse at 50% 30%, rgba(46,35,80,.65), rgba(27,20,54,.92));
+  transition:opacity .8s ease; pointer-events:auto;
+}
+.fullscreen.fadeout{ opacity:0; pointer-events:none; }
+.stork{ font-size:3.4rem; margin-bottom:6px; animation:bob 3s ease-in-out infinite; filter:drop-shadow(0 8px 14px rgba(0,0,0,.4)); }
+@keyframes bob{ 0%,100%{ transform:translateY(0) rotate(-2deg);} 50%{ transform:translateY(-14px) rotate(2deg);} }
+.title-xl{ color:var(--cream); font-size:clamp(1.7rem,6vw,2.6rem); margin:6px 0 4px; text-shadow:0 4px 18px rgba(0,0,0,.5); }
+.sub-xl{ color:#d8cdf0; font-size:1rem; max-width:420px; margin:0 0 22px; line-height:1.5; }
+.pill-note{ font-family:'Baloo 2'; color:var(--gold); font-size:.8rem; letter-spacing:.08em; text-transform:uppercase; margin-bottom:14px;}
+
+#reveal-banner{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; z-index:25; opacity:0; pointer-events:none; transition:opacity .6s ease;}
+#reveal-banner.show{ opacity:1; }
+#reveal-banner h1{ font-size:clamp(2.2rem,10vw,4.2rem); text-shadow:0 6px 30px rgba(0,0,0,.5); margin:0; }
+#reveal-banner .rb-sub{ font-family:'Quicksand'; font-weight:700; }
+
+@media (max-width:480px){
+  .panel{ padding:22px 16px 18px; }
+  .mem-grid{ gap:6px; }
+}
+</style>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+
+<div id="progress"></div>
+<button id="hint-btn" title="Need a hint?">💡</button>
+
+<div id="ui-layer">
+
+  <!-- Riddle-type puzzle panel -->
+  <div class="panel" id="panel-riddle">
+    <span class="eyebrow" id="riddle-eyebrow">Door 1</span>
+    <h2 id="riddle-title">A little riddle...</h2>
+    <p class="riddle-text" id="riddle-question"></p>
+    <input type="text" id="riddle-input" placeholder="Type your answer..." autocomplete="off">
+    <div><button class="btn" id="riddle-submit">Try the door</button></div>
+    <div class="msg" id="riddle-msg"></div>
+  </div>
+
+  <!-- Memory match puzzle -->
+  <div class="panel" id="panel-memory">
+    <span class="eyebrow">Door 2</span>
+    <h2>Match the pairs</h2>
+    <p>Flip two cards at a time. Find every pair to unlock the door.</p>
+    <div class="mem-grid" id="mem-grid"></div>
+    <div class="msg" id="memory-msg"></div>
+  </div>
+
+  <!-- Scramble puzzle -->
+  <div class="panel" id="panel-scramble">
+    <span class="eyebrow">Door 3</span>
+    <h2 id="scramble-title">Unscramble it</h2>
+    <p>Rearrange the letters to reveal a nursery favorite:</p>
+    <p class="riddle-text" id="scramble-word" style="letter-spacing:.2em; font-size:1.3rem; font-style:normal; text-align:center;"></p>
+    <input type="text" id="scramble-input" placeholder="Type the word..." autocomplete="off">
+    <div><button class="btn" id="scramble-submit">Try the door</button></div>
+    <div class="msg" id="scramble-msg"></div>
+  </div>
+
+  <!-- Countdown / sequence puzzle -->
+  <div class="panel" id="panel-sequence">
+    <span class="eyebrow">Door 4</span>
+    <h2>Finish the countdown</h2>
+    <p class="riddle-text" id="sequence-question"></p>
+    <input type="text" id="sequence-input" placeholder="Type the missing number..." autocomplete="off">
+    <div><button class="btn" id="sequence-submit">Try the door</button></div>
+    <div class="msg" id="sequence-msg"></div>
+  </div>
+
+  <!-- Final gate: riddle + password -->
+  <div class="panel" id="panel-final">
+    <span class="eyebrow">The Final Door</span>
+    <h2>The Door of Doors</h2>
+    <p class="riddle-text" id="final-riddle"></p>
+    <p>Whisper the secret word the parents-to-be shared with you...</p>
+    <input type="text" id="final-input" placeholder="Enter the secret word" autocomplete="off">
+    <div><button class="btn" id="final-submit">Open the door</button></div>
+    <div class="msg" id="final-msg"></div>
+  </div>
+
+  <!-- Continue button shown after a door opens -->
+  <div class="panel" id="panel-continue">
+    <span class="eyebrow" id="continue-eyebrow">Door opened!</span>
+    <h2 id="continue-title">Wonderful!</h2>
+    <p id="continue-text">The door creaks open and warm light spills out...</p>
+    <button class="btn" id="continue-btn">Walk onward →</button>
+  </div>
+
+</div>
+
+<div id="reveal-banner">
+  <div style="text-align:center;">
+    <div class="rb-sub" id="rb-eyebrow" style="color:var(--gold); font-size:1rem; letter-spacing:.12em; text-transform:uppercase; margin-bottom:6px;">It's time...</div>
+    <h1 id="rb-title" style="color:#fff;">IT'S A ...</h1>
+    <div class="rb-sub" id="rb-names" style="color:#fff; font-size:1.15rem; margin-top:8px;"></div>
+    <div style="margin-top:26px;"><button class="btn" id="reveal-continue">Continue the story →</button></div>
+  </div>
+</div>
+
+<!-- Intro screen -->
+<div class="fullscreen" id="intro-screen">
+  <div class="pill-note">Shhh... a surprise is loading</div>
+  <div class="stork">🍼</div>
+  <h1 class="title-xl" id="intro-title">A little adventure is coming...</h1>
+  <p class="sub-xl">Baby will arrive soon! Walk through every door of this storybook town — but don't you dare peek at the very last one until you've earned your way there.</p>
+  <button class="btn" id="begin-btn">Begin the Adventure ✨</button>
+</div>
+
+<!-- Thanks screen -->
+<div class="fullscreen" id="thanks-screen" style="display:none;">
+  <div class="pill-note">The End</div>
+  <div class="stork">💛</div>
+  <h1 class="title-xl">Thank you for being here</h1>
+  <p class="sub-xl" id="thanks-text">for sharing in this little adventure, and for all the love you'll give our baby.</p>
+</div>
+
+<script>
+/* ================================================================
+   🎉  CONFIG — customize your reveal here
+   ================================================================ */
+const CONFIG = {
+  parentNames: "The Parents-to-Be",
+  babyDueText: "Due Fall 2026",
+  // The word/phrase guests type to open the BLUE door (boy reveal)
+  passwordBlue: "OCEAN",
+  // The word/phrase guests type to open the PINK door (girl reveal)
+  passwordPink: "BLOSSOM",
+  // Only share ONE of the two secret words with your guests —
+  // whichever one matches your baby's true gender!
+  revealTextBoy: "IT'S A BOY!",
+  revealTextGirl: "IT'S A GIRL!",
+  thanksNote: "for sharing in this little adventure, and for all the love you'll give our baby."
+};
+document.getElementById('thanks-text').textContent = CONFIG.thanksNote;
+
+/* ================================================================
+   Puzzle content for the 4 warm-up doors
+   ================================================================ */
+const PUZZLES = [
+  {
+    type: 'riddle',
+    question: "I must be broken before I'm any use, and inside me a new life waits to begin its journey. What am I?",
+    answers: ['egg','an egg','eggs']
+  },
+  { type: 'memory' },
+  {
+    type: 'scramble',
+    scrambled: 'TELRTA',
+    answer: 'RATTLE'
+  },
+  {
+    type: 'sequence',
+    question: "5 ... 4 ... 3 ... 2 ... ?",
+    answer: '1'
+  }
+];
+const TOTAL_DOORS = PUZZLES.length + 1; // +1 for final gate
+
+/* ================================================================
+   THREE.JS SCENE
+   ================================================================ */
+const canvas = document.getElementById('bg-canvas');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.shadowMap.enabled = true;
+
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x1b1436, 0.018);
+
+const camera = new THREE.PerspectiveCamera(52, window.innerWidth/window.innerHeight, 0.1, 200);
+camera.position.set(0, 4.2, 9);
+
+// lights
+scene.add(new THREE.AmbientLight(0x8a7ec7, 0.55));
+const moon = new THREE.DirectionalLight(0xcbd4ff, 0.7);
+moon.position.set(-6, 12, 4);
+moon.castShadow = true;
+moon.shadow.mapSize.set(1024,1024);
+scene.add(moon);
+const warmFill = new THREE.PointLight(0xffcf8a, 0.6, 30);
+warmFill.position.set(0,3,6);
+scene.add(warmFill);
+
+// ground path
+const groundMat = new THREE.MeshStandardMaterial({ color:0x342a55, roughness:0.9 });
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(400, 30), groundMat);
+ground.rotation.x = -Math.PI/2;
+ground.receiveShadow = true;
+scene.add(ground);
+
+// glowing path stones
+const stoneMat = new THREE.MeshStandardMaterial({ color:0xF4C95D, emissive:0x664a12, roughness:0.5 });
+for(let i=-2;i<26;i++){
+  const stone = new THREE.Mesh(new THREE.CylinderGeometry(0.35,0.4,0.12,16), stoneMat);
+  stone.position.set(i*3 + ((i%2)*0.3), 0.06, (i%2===0? 0.3:-0.3));
+  stone.receiveShadow = true;
+  scene.add(stone);
+}
+
+// starfield
+const starGeo = new THREE.BufferGeometry();
+const starCount = 700;
+const starPos = new Float32Array(starCount*3);
+for(let i=0;i<starCount;i++){
+  starPos[i*3] = (Math.random()-0.5)*160;
+  starPos[i*3+1] = Math.random()*60 + 5;
+  starPos[i*3+2] = (Math.random()-0.5)*160 - 20;
+}
+starGeo.setAttribute('position', new THREE.BufferAttribute(starPos,3));
+const starMat = new THREE.PointsMaterial({ color:0xffffff, size:0.18, transparent:true, opacity:0.85 });
+const stars = new THREE.Points(starGeo, starMat);
+scene.add(stars);
+
+// moon disc
+const moonMesh = new THREE.Mesh(
+  new THREE.SphereGeometry(3,24,24),
+  new THREE.MeshBasicMaterial({ color:0xFFF6D8 })
+);
+moonMesh.position.set(-30, 26, -60);
+scene.add(moonMesh);
+
+/* ---------- building factory ---------- */
+function makeDoor(width, height, color){
+  const pivot = new THREE.Group();
+  const doorMat = new THREE.MeshStandardMaterial({ color, roughness:0.6, metalness:0.05, emissive:0x000000 });
+  const door = new THREE.Mesh(new THREE.BoxGeometry(width, height, 0.12), doorMat);
+  door.position.set(width/2, height/2, 0);
+  door.castShadow = true;
+  const knob = new THREE.Mesh(new THREE.SphereGeometry(0.06,10,10), new THREE.MeshStandardMaterial({color:0xF4C95D, metalness:0.6, roughness:0.3}));
+  knob.position.set(width*0.85, height*0.5, 0.09);
+  door.add(knob);
+  pivot.add(door);
+  pivot.userData.door = door;
+  pivot.userData.doorMat = doorMat;
+  return pivot;
+}
+
+function glowFrame(width, height, depth){
+  const frameMat = new THREE.MeshStandardMaterial({ color:0xF4C95D, emissive:0x3a2a08, emissiveIntensity:0.4, roughness:0.4 });
+  const frame = new THREE.Group();
+  const thick = 0.14;
+  const top = new THREE.Mesh(new THREE.BoxGeometry(width+thick*2, thick, depth), frameMat);
+  top.position.set(0, height+thick/2, 0);
+  const left = new THREE.Mesh(new THREE.BoxGeometry(thick, height+thick, depth), frameMat);
+  left.position.set(-width/2-thick/2, height/2, 0);
+  const right = left.clone(); right.position.x = width/2+thick/2;
+  frame.add(top,left,right);
+  return frame;
+}
+
+function createCottage(){
+  const g = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.BoxGeometry(3.4,2.6,2.6), new THREE.MeshStandardMaterial({color:0xE8DFC8, roughness:0.85}));
+  body.position.y = 1.3; body.castShadow = true; body.receiveShadow = true;
+  const roof = new THREE.Mesh(new THREE.ConeGeometry(2.6,1.6,4), new THREE.MeshStandardMaterial({color:0xB2564A, roughness:0.7}));
+  roof.position.y = 2.6+0.8; roof.rotation.y = Math.PI/4; roof.castShadow = true;
+  g.add(body, roof);
+  const doorW=0.9, doorH=1.6;
+  const pivot = makeDoor(doorW, doorH, 0x6a4a8c);
+  pivot.position.set(-doorW/2, 0, 1.31);
+  g.add(pivot);
+  const frame = glowFrame(doorW, doorH, 0.2);
+  frame.position.set(0,0,1.3);
+  g.add(frame);
+  // window
+  const win = new THREE.Mesh(new THREE.BoxGeometry(0.55,0.55,0.05), new THREE.MeshStandardMaterial({color:0xFFE9A8, emissive:0xFFD37A, emissiveIntensity:0.6}));
+  win.position.set(1.0,1.6,1.32);
+  g.add(win);
+  g.userData.doorPivot = pivot;
+  g.userData.label = 'Cottage';
+  return g;
+}
+
+function createCastleTurret(){
+  const g = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.CylinderGeometry(1.5,1.6,3.0,16), new THREE.MeshStandardMaterial({color:0xB8A6C9, roughness:0.8}));
+  body.position.y=1.5; body.castShadow=true; body.receiveShadow=true;
+  const roof = new THREE.Mesh(new THREE.ConeGeometry(1.7,2.0,16), new THREE.MeshStandardMaterial({color:0x6F5CA8, roughness:0.6}));
+  roof.position.y = 3.0+1.0; roof.castShadow=true;
+  const flagPole = new THREE.Mesh(new THREE.CylinderGeometry(0.03,0.03,0.6,6), new THREE.MeshStandardMaterial({color:0x333}));
+  flagPole.position.y = 3.0+2.0+0.3;
+  g.add(body, roof, flagPole);
+  const doorW=0.9, doorH=1.7;
+  const pivot = makeDoor(doorW, doorH, 0x4a3a6c);
+  pivot.position.set(-doorW/2, 0, 1.51);
+  g.add(pivot);
+  const frame = glowFrame(doorW, doorH, 0.2);
+  frame.position.set(0,0,1.5);
+  g.add(frame);
+  g.userData.doorPivot = pivot;
+  g.userData.label = 'Turret';
+  return g;
+}
+
+function createTreehouse(){
+  const g = new THREE.Group();
+  const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.9,1.1,3.4,12), new THREE.MeshStandardMaterial({color:0x6B4A34, roughness:0.9}));
+  trunk.position.y=1.7; trunk.castShadow=true; trunk.receiveShadow=true;
+  const leaves = new THREE.Mesh(new THREE.SphereGeometry(2.1,16,16), new THREE.MeshStandardMaterial({color:0x6FAE7C, roughness:0.85}));
+  leaves.position.y = 3.4+1.1; leaves.castShadow=true;
+  const leaves2 = new THREE.Mesh(new THREE.SphereGeometry(1.4,16,16), new THREE.MeshStandardMaterial({color:0x86C48F, roughness:0.85}));
+  leaves2.position.set(1.4, 3.4+0.6, 0.6);
+  g.add(trunk, leaves, leaves2);
+  const doorW=0.8, doorH=1.5;
+  const pivot = makeDoor(doorW, doorH, 0x3d2c22);
+  pivot.position.set(-doorW/2, 0, 1.01);
+  g.add(pivot);
+  const frame = glowFrame(doorW, doorH, 0.2);
+  frame.position.set(0,0,1.0);
+  g.add(frame);
+  g.userData.doorPivot = pivot;
+  g.userData.label = 'Treehouse';
+  return g;
+}
+
+function createIgloo(){
+  const g = new THREE.Group();
+  const domeGeo = new THREE.SphereGeometry(1.9,20,20,0,Math.PI*2,0,Math.PI/1.9);
+  const dome = new THREE.Mesh(domeGeo, new THREE.MeshStandardMaterial({color:0xE7F1FB, roughness:0.6}));
+  dome.castShadow = true; dome.receiveShadow = true;
+  g.add(dome);
+  const doorW=0.85, doorH=1.4;
+  const pivot = makeDoor(doorW, doorH, 0x9CC7E8);
+  pivot.position.set(-doorW/2, 0, 1.55);
+  g.add(pivot);
+  const frame = glowFrame(doorW, doorH, 0.2);
+  frame.position.set(0,0,1.5);
+  g.add(frame);
+  g.userData.doorPivot = pivot;
+  g.userData.label = 'Igloo';
+  return g;
+}
+
+function createGate(){
+  const g = new THREE.Group();
+  const base = new THREE.Mesh(new THREE.BoxGeometry(5.2,3.6,1.4), new THREE.MeshStandardMaterial({color:0x4a3d6e, roughness:0.7}));
+  base.position.y=1.8; base.castShadow=true; base.receiveShadow=true;
+  const towerGeo = new THREE.CylinderGeometry(0.7,0.8,4.6,14);
+  const towerMat = new THREE.MeshStandardMaterial({color:0x3a2f58, roughness:0.7});
+  const t1 = new THREE.Mesh(towerGeo, towerMat); t1.position.set(-2.6,2.3,0); t1.castShadow=true;
+  const t2 = t1.clone(); t2.position.x = 2.6;
+  const cone1 = new THREE.Mesh(new THREE.ConeGeometry(0.85,1.3,14), new THREE.MeshStandardMaterial({color:0xF4C95D, emissive:0x4d3b0f, emissiveIntensity:0.3}));
+  cone1.position.set(-2.6, 4.6+0.65, 0);
+  const cone2 = cone1.clone(); cone2.position.x = 2.6;
+  g.add(base, t1, t2, cone1, cone2);
+
+  // two door leaves (left = will tint blue, right = will tint pink)
+  const doorW=1.05, doorH=2.6;
+  const leftPivot = new THREE.Group();
+  const leftDoor = new THREE.Mesh(new THREE.BoxGeometry(doorW,doorH,0.14), new THREE.MeshStandardMaterial({color:0xC9BFE0, roughness:0.5}));
+  leftDoor.position.set(doorW/2, doorH/2, 0);
+  leftPivot.add(leftDoor);
+  leftPivot.position.set(-doorW-0.02, 0, 0.71);
+  const rightPivot = new THREE.Group();
+  const rightDoor = new THREE.Mesh(new THREE.BoxGeometry(doorW,doorH,0.14), new THREE.MeshStandardMaterial({color:0xC9BFE0, roughness:0.5}));
+  rightDoor.position.set(-doorW/2, doorH/2, 0);
+  rightPivot.add(rightDoor);
+  rightPivot.position.set(doorW+0.02, 0, 0.71);
+  g.add(leftPivot, rightPivot);
+
+  const frame = glowFrame(doorW*2+0.1, doorH, 0.3);
+  frame.position.set(0,0,0.7);
+  g.add(frame);
+
+  g.userData.leftPivot = leftPivot;
+  g.userData.rightPivot = rightPivot;
+  g.userData.leftDoor = leftDoor;
+  g.userData.rightDoor = rightDoor;
+  g.userData.label = 'Gate';
+  return g;
+}
+
+// place buildings along the path
+const buildingFactories = [createCottage, createCastleTurret, createTreehouse, createIgloo];
+const buildings = [];
+const SPACING = 7.5;
+buildingFactories.forEach((fn, i)=>{
+  const b = fn();
+  b.position.set(i*SPACING, 0, -1.2);
+  scene.add(b);
+  buildings.push(b);
+});
+const gate = createGate();
+gate.position.set(buildingFactories.length*SPACING + 1.4, 0, -1.4);
+scene.add(gate);
+
+/* ---------- little rolling hero character ---------- */
+const hero = new THREE.Group();
+const bodyMat = new THREE.MeshStandardMaterial({ color:0xF4C95D, roughness:0.4, metalness:0.1 });
+const heroBody = new THREE.Mesh(new THREE.SphereGeometry(0.42,20,20), bodyMat);
+heroBody.castShadow = true;
+hero.add(heroBody);
+const heroHead = new THREE.Mesh(new THREE.SphereGeometry(0.26,18,18), new THREE.MeshStandardMaterial({color:0xFFF6E0, roughness:0.5}));
+heroHead.position.set(0,0.55,0.05);
+heroHead.castShadow = true;
+hero.add(heroHead);
+const eyeGeo = new THREE.SphereGeometry(0.045,10,10);
+const eyeMat = new THREE.MeshStandardMaterial({ color:0x2C2140 });
+const eyeL = new THREE.Mesh(eyeGeo, eyeMat); eyeL.position.set(-0.09,0.58,0.27);
+const eyeR = eyeL.clone(); eyeR.position.x = 0.09;
+hero.add(eyeL, eyeR);
+const cheekMat = new THREE.MeshStandardMaterial({ color:0xF2A9A5, roughness:0.9 });
+const cheekL = new THREE.Mesh(new THREE.CircleGeometry(0.05,10), cheekMat); cheekL.position.set(-0.15,0.48,0.28); cheekL.rotation.y = -0.2;
+const cheekR = cheekL.clone(); cheekR.position.x = 0.15; cheekR.rotation.y = 0.2;
+hero.add(cheekL, cheekR);
+const antenna = new THREE.Mesh(new THREE.CylinderGeometry(0.02,0.02,0.28,6), new THREE.MeshStandardMaterial({color:0xE0A93C}));
+antenna.position.set(0,0.86,0.02);
+const antennaTip = new THREE.Mesh(new THREE.SphereGeometry(0.06,10,10), new THREE.MeshStandardMaterial({color:0x8FD8C8, emissive:0x2c9c86, emissiveIntensity:0.5}));
+antennaTip.position.set(0,1.0,0.02);
+hero.add(antenna, antennaTip);
+hero.position.set(-3, 0.42, 0.4);
+scene.add(hero);
+
+// gentle light that follows hero
+const heroLight = new THREE.PointLight(0xFFE3A0, 0.5, 6);
+hero.add(heroLight);
+heroLight.position.set(0,1,0.5);
+
+/* ================================================================
+   STATE MACHINE
+   ================================================================ */
+const state = {
+  index: 0,          // which building/door we're currently at (0..buildings.length) then gate
+  heroTargetX: hero.position.x,
+  heroMoving: false,
+  bounceT: 0,
+  camLookX: hero.position.x,
+  time: 0,
+  phase: 'intro'     // 'intro' | 'doors' | 'gateReached' | 'thanks'
+};
+
+function buildProgressDots(){
+  const wrap = document.getElementById('progress');
+  wrap.innerHTML = '';
+  for(let i=0;i<TOTAL_DOORS;i++){
+    const d = document.createElement('div');
+    d.className = 'dot';
+    d.id = 'dot-'+i;
+    wrap.appendChild(d);
+  }
+  updateDots();
+}
+function updateDots(){
+  for(let i=0;i<TOTAL_DOORS;i++){
+    const d = document.getElementById('dot-'+i);
+    if(!d) continue;
+    d.classList.toggle('done', i < state.index);
+    d.classList.toggle('active', i === state.index);
+  }
+}
+buildProgressDots();
+
+/* ---------- simple WebAudio chime (no external files) ---------- */
+let actx;
+function chime(freqs, dur=0.18){
+  try{
+    actx = actx || new (window.AudioContext||window.webkitAudioContext)();
+    freqs.forEach((f,i)=>{
+      const o = actx.createOscillator();
+      const g = actx.createGain();
+      o.type='sine'; o.frequency.value=f;
+      g.gain.value = 0.0001;
+      o.connect(g); g.connect(actx.destination);
+      const t0 = actx.currentTime + i*0.09;
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.exponentialRampToValueAtTime(0.12, t0+0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0+dur);
+      o.start(t0); o.stop(t0+dur+0.05);
+    });
+  }catch(e){}
+}
+
+/* ---------- panel helpers ---------- */
+function showPanel(id){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('show'));
+  const p = document.getElementById(id);
+  p.classList.remove('hide-pop');
+  requestAnimationFrame(()=> p.classList.add('show'));
+}
+function hidePanel(id){
+  document.getElementById(id).classList.remove('show');
+}
+function hideAllPanels(){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('show'));
+}
+
+/* ---------- move hero + camera to a building index ---------- */
+function goToBuilding(idx){
+  state.index = idx;
+  updateDots();
+  const target = (idx < buildings.length) ? buildings[idx] : gate;
+  const doorLocalX = (idx < buildings.length) ? -0.1 : 0; // stand near door
+  state.heroTargetX = target.position.x + doorLocalX - 0.9;
+  state.heroMoving = true;
+  hideAllPanels();
+}
+
+/* ---------- open a hinged door with tween ---------- */
+function tweenDoorOpen(pivot, targetAngle, duration=900, onDone){
+  const startAngle = pivot.rotation.y;
+  const startTime = performance.now();
+  function step(now){
+    const t = Math.min(1,(now-startTime)/duration);
+    const ease = 1 - Math.pow(1-t,3);
+    pivot.rotation.y = startAngle + (targetAngle-startAngle)*ease;
+    if(t<1) requestAnimationFrame(step); else if(onDone) onDone();
+  }
+  requestAnimationFrame(step);
+}
+
+/* ---------- confetti (DOM, cheap & cheerful) ---------- */
+function launchConfetti(colors, count=90){
+  for(let i=0;i<count;i++){
+    const el = document.createElement('div');
+    el.className = 'confetti-piece';
+    const size = 6+Math.random()*7;
+    el.style.width = size+'px';
+    el.style.height = (size*0.4)+'px';
+    el.style.left = Math.random()*100+'vw';
+    el.style.background = colors[Math.floor(Math.random()*colors.length)];
+    el.style.opacity = 0.9;
+    document.body.appendChild(el);
+    const duration = 2600+Math.random()*1800;
+    const drift = (Math.random()-0.5)*200;
+    const rot = Math.random()*720-360;
+    el.animate([
+      { transform:`translate(0,0) rotate(0deg)`, opacity:1 },
+      { transform:`translate(${drift}px, ${window.innerHeight+40}px) rotate(${rot}deg)`, opacity:0.9 }
+    ], { duration, easing:'cubic-bezier(.25,.46,.45,.94)' });
+    setTimeout(()=> el.remove(), duration+50);
+  }
+}
+
+/* ================================================================
+   DOOR / PUZZLE FLOW
+   ================================================================ */
+function startDoorPuzzle(idx){
+  if(idx >= PUZZLES.length){
+    openFinalGatePanel();
+    return;
+  }
+  const puzzle = PUZZLES[idx];
+  if(puzzle.type === 'riddle'){
+    document.getElementById('riddle-eyebrow').textContent = 'Door '+(idx+1)+' of '+TOTAL_DOORS;
+    document.getElementById('riddle-question').textContent = puzzle.question;
+    document.getElementById('riddle-input').value = '';
+    document.getElementById('riddle-msg').textContent = '';
+    document.getElementById('riddle-msg').className = 'msg';
+    showPanel('panel-riddle');
+  } else if(puzzle.type === 'memory'){
+    buildMemoryGame();
+    showPanel('panel-memory');
+  } else if(puzzle.type === 'scramble'){
+    document.getElementById('scramble-word').textContent = puzzle.scrambled.split('').join(' ');
+    document.getElementById('scramble-input').value = '';
+    document.getElementById('scramble-msg').textContent = '';
+    showPanel('panel-scramble');
+  } else if(puzzle.type === 'sequence'){
+    document.getElementById('sequence-question').textContent = puzzle.question;
+    document.getElementById('sequence-input').value = '';
+    document.getElementById('sequence-msg').textContent = '';
+    showPanel('panel-sequence');
+  }
+}
+
+function onPuzzleSolved(idx){
+  chime([523,659,784]);
+  const pivot = buildings[idx].userData.doorPivot;
+  hidePanel(idPanelFor(idx));
+  tweenDoorOpen(pivot, -2.1, 900, ()=>{
+    // glow
+    pivot.userData.doorMat.emissive = new THREE.Color(0xffdf9a);
+    pivot.userData.doorMat.emissiveIntensity = 0.5;
+    showContinuePanel(idx);
+  });
+}
+function idPanelFor(idx){
+  const t = PUZZLES[idx].type;
+  return t==='riddle' ? 'panel-riddle' : t==='memory' ? 'panel-memory' : t==='scramble' ? 'panel-scramble' : 'panel-sequence';
+}
+
+function showContinuePanel(idx){
+  document.getElementById('continue-eyebrow').textContent = 'Door '+(idx+1)+' opened!';
+  const flavors = [
+    "A cozy little room glows inside — someone's been getting ready for a baby!",
+    "Soft light and giggles spill out from the turret...",
+    "Leaves rustle as the treehouse door swings wide open.",
+    "A gentle chill and a warm welcome — onward we go!"
+  ];
+  document.getElementById('continue-title').textContent = 'Wonderful!';
+  document.getElementById('continue-text').textContent = flavors[idx] || 'The door creaks open...';
+  showPanel('panel-continue');
+  document.getElementById('continue-btn').onclick = ()=>{
+    hidePanel('panel-continue');
+    goToBuilding(idx+1);
+  };
+}
+
+/* ----- riddle check ----- */
+document.getElementById('riddle-submit').onclick = ()=>{
+  const idx = state.index;
+  const val = document.getElementById('riddle-input').value.trim().toLowerCase();
+  const puzzle = PUZZLES[idx];
+  const msg = document.getElementById('riddle-msg');
+  if(puzzle.answers.includes(val)){
+    msg.textContent = 'Yes! The door creaks open...'; msg.className='msg ok';
+    setTimeout(()=>onPuzzleSolved(idx), 500);
+  } else {
+    msg.textContent = 'Not quite — think about new beginnings...'; msg.className='msg err';
+    chime([220,196]);
+  }
+};
+document.getElementById('riddle-input').addEventListener('keydown', e=>{ if(e.key==='Enter') document.getElementById('riddle-submit').click(); });
+
+/* ----- scramble check ----- */
+document.getElementById('scramble-submit').onclick = ()=>{
+  const idx = state.index;
+  const val = document.getElementById('scramble-input').value.trim().toUpperCase();
+  const msg = document.getElementById('scramble-msg');
+  if(val === PUZZLES[idx].answer){
+    msg.textContent = 'That\'s it! The door swings open...'; msg.className='msg ok';
+    setTimeout(()=>onPuzzleSolved(idx), 500);
+  } else {
+    msg.textContent = 'Hmm, try rearranging again!'; msg.className='msg err';
+    chime([220,196]);
+  }
+};
+document.getElementById('scramble-input').addEventListener('keydown', e=>{ if(e.key==='Enter') document.getElementById('scramble-submit').click(); });
+
+/* ----- sequence check ----- */
+document.getElementById('sequence-submit').onclick = ()=>{
+  const idx = state.index;
+  const val = document.getElementById('sequence-input').value.trim();
+  const msg = document.getElementById('sequence-msg');
+  if(val === PUZZLES[idx].answer){
+    msg.textContent = 'Countdown complete! The door opens...'; msg.className='msg ok';
+    setTimeout(()=>onPuzzleSolved(idx), 500);
+  } else {
+    msg.textContent = 'Keep counting down...'; msg.className='msg err';
+    chime([220,196]);
+  }
+};
+document.getElementById('sequence-input').addEventListener('keydown', e=>{ if(e.key==='Enter') document.getElementById('sequence-submit').click(); });
+
+/* ----- memory game ----- */
+function buildMemoryGame(){
+  const emojis = ['🍼','🧸','🧦','🎀'];
+  let cards = [...emojis, ...emojis];
+  // shuffle
+  for(let i=cards.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [cards[i],cards[j]] = [cards[j],cards[i]];
+  }
+  const grid = document.getElementById('mem-grid');
+  grid.innerHTML = '';
+  let flipped = [];
+  let lock = false;
+  let matches = 0;
+  document.getElementById('memory-msg').textContent = '';
+  cards.forEach((val, i)=>{
+    const card = document.createElement('div');
+    card.className = 'mem-card';
+    card.dataset.val = val;
+    card.dataset.i = i;
+    card.textContent = val;
+    card.onclick = ()=>{
+      if(lock || card.classList.contains('flipped') || card.classList.contains('matched')) return;
+      card.classList.add('flipped');
+      flipped.push(card);
+      if(flipped.length===2){
+        lock = true;
+        setTimeout(()=>{
+          if(flipped[0].dataset.val === flipped[1].dataset.val){
+            flipped.forEach(c=>c.classList.add('matched'));
+            matches++;
+            chime([440,554]);
+            if(matches === emojis.length){
+              document.getElementById('memory-msg').textContent = 'All matched! The door opens...';
+              document.getElementById('memory-msg').className = 'msg ok';
+              setTimeout(()=>onPuzzleSolved(state.index), 600);
+            }
+          } else {
+            flipped.forEach(c=>c.classList.remove('flipped'));
+          }
+          flipped = [];
+          lock = false;
+        }, 650);
+      }
+    };
+    grid.appendChild(card);
+  });
+}
+
+/* ----- hint button ----- */
+const HINTS = [
+  "Think of something round that a chick hatches from...",
+  "Look for matching pairs — memory is key!",
+  "It shakes and rattles when baby plays...",
+  "You're literally counting down to the surprise...",
+  "Ask the real parents-to-be for the secret word!"
+];
+document.getElementById('hint-btn').onclick = ()=>{
+  const idx = Math.min(state.index, HINTS.length-1);
+  alert(HINTS[idx]);
+};
+
+/* ================================================================
+   FINAL GATE
+   ================================================================ */
+function openFinalGatePanel(){
+  document.getElementById('final-riddle').textContent =
+    "Beyond me lies a name not yet spoken aloud, a color not yet chosen by chance. Only those trusted with the secret may pass.";
+  document.getElementById('final-input').value = '';
+  document.getElementById('final-msg').textContent = '';
+  showPanel('panel-final');
+}
+
+document.getElementById('final-submit').onclick = ()=>{
+  const val = document.getElementById('final-input').value.trim().toUpperCase();
+  const msg = document.getElementById('final-msg');
+  if(val === CONFIG.passwordBlue.toUpperCase()){
+    hidePanel('panel-final');
+    openGateDoor('blue');
+  } else if(val === CONFIG.passwordPink.toUpperCase()){
+    hidePanel('panel-final');
+    openGateDoor('pink');
+  } else {
+    msg.textContent = "That's not the secret word... ask the parents!";
+    msg.className = 'msg err';
+    chime([196,164]);
+    // little shake
+    const g = gate.position;
+    const ox = g.x;
+    let t0 = performance.now();
+    function shake(now){
+      const dt = now-t0;
+      if(dt<400){
+        g.x = ox + Math.sin(dt*0.08)*0.06;
+        requestAnimationFrame(shake);
+      } else g.x = ox;
+    }
+    requestAnimationFrame(shake);
+  }
+};
+document.getElementById('final-input').addEventListener('keydown', e=>{ if(e.key==='Enter') document.getElementById('final-submit').click(); });
+
+function openGateDoor(color){
+  chime([392,523,659,784]);
+  const isBoy = color==='blue';
+  const doorColor = isBoy ? 0x6FA8DC : 0xF2A0C3;
+  const leftPivot = gate.userData.leftPivot;
+  const rightPivot = gate.userData.rightPivot;
+  gate.userData.leftDoor.material.color.set(doorColor);
+  gate.userData.rightDoor.material.color.set(doorColor);
+  gate.userData.leftDoor.material.emissive = new THREE.Color(doorColor);
+  gate.userData.leftDoor.material.emissiveIntensity = 0.3;
+  gate.userData.rightDoor.material.emissive = new THREE.Color(doorColor);
+  gate.userData.rightDoor.material.emissiveIntensity = 0.3;
+
+  tweenDoorOpen(leftPivot, -2.0, 1100);
+  tweenDoorOpen(rightPivot, 2.0, 1100, ()=>{
+    setTimeout(()=> triggerReveal(isBoy), 300);
+  });
+}
+
+function triggerReveal(isBoy){
+  const banner = document.getElementById('reveal-banner');
+  document.getElementById('rb-title').textContent = isBoy ? CONFIG.revealTextBoy : CONFIG.revealTextGirl;
+  document.getElementById('rb-title').style.color = isBoy ? '#BFE0FF' : '#FFD6EA';
+  document.getElementById('rb-names').textContent = CONFIG.parentNames + '  •  ' + CONFIG.babyDueText;
+  banner.classList.add('show');
+  launchConfetti(isBoy ? ['#6FA8DC','#BFE0FF','#3D6FA8','#ffffff'] : ['#F2A0C3','#FFD6EA','#C9558B','#ffffff'], 130);
+  const boomInterval = setInterval(()=>{
+    launchConfetti(isBoy ? ['#6FA8DC','#BFE0FF'] : ['#F2A0C3','#FFD6EA'], 40);
+  }, 900);
+  setTimeout(()=> clearInterval(boomInterval), 3600);
+
+  document.getElementById('reveal-continue').onclick = ()=>{
+    banner.classList.remove('show');
+    goToThanks();
+  };
+}
+
+/* ================================================================
+   THANKS SCENE
+   ================================================================ */
+function goToThanks(){
+  state.phase = 'thanks';
+  state.heroTargetX = gate.position.x + 2.5;
+  state.heroMoving = true;
+  setTimeout(()=>{
+    document.getElementById('thanks-screen').style.display='flex';
+    requestAnimationFrame(()=> document.getElementById('thanks-screen').classList.add('show'));
+  }, 1400);
+}
+
+/* ================================================================
+   INTRO / BEGIN
+   ================================================================ */
+document.getElementById('begin-btn').onclick = ()=>{
+  const intro = document.getElementById('intro-screen');
+  intro.classList.add('fadeout');
+  setTimeout(()=> intro.style.display='none', 850);
+  chime([392,494,587]);
+  state.phase = 'doors';
+  goToBuilding(0);
+  setTimeout(()=>{ /* wait for hero to arrive before showing puzzle */ }, 0);
+};
+
+/* watch hero arrival to trigger puzzle panel */
+let lastMoving = false;
+function checkArrival(){
+  if(lastMoving && !state.heroMoving && state.phase === 'doors'){
+    startDoorPuzzle(state.index);
+    if(state.index >= PUZZLES.length){
+      state.phase = 'gateReached'; // final gate puzzle showing; don't re-trigger
+    }
+  }
+  lastMoving = state.heroMoving;
+}
+
+/* ================================================================
+   ANIMATE LOOP
+   ================================================================ */
+function animate(now){
+  requestAnimationFrame(animate);
+  state.time = now*0.001;
+
+  // hero movement
+  const dx = state.heroTargetX - hero.position.x;
+  if(Math.abs(dx) > 0.02){
+    hero.position.x += dx * 0.06;
+    hero.rotation.z = Math.sin(state.time*10)*0.15;
+    hero.position.y = 0.42 + Math.abs(Math.sin(state.time*10))*0.18;
+    state.heroMoving = true;
+  } else {
+    hero.position.y = 0.42 + Math.sin(state.time*2)*0.03;
+    hero.rotation.z *= 0.9;
+    state.heroMoving = false;
+  }
+  checkArrival();
+
+  // idle bob for antenna tip glow pulse
+  antennaTip.material.emissiveIntensity = 0.4 + Math.sin(state.time*3)*0.2;
+
+  // camera follow
+  const camTargetX = hero.position.x + 2.4;
+  camera.position.x += (camTargetX - camera.position.x)*0.04;
+  camera.position.y += (4.2 - camera.position.y)*0.04;
+  camera.position.z += (9 - camera.position.z)*0.04;
+  const lookTarget = new THREE.Vector3(hero.position.x + 0.8, 1.1, 0);
+  camera.lookAt(lookTarget);
+
+  stars.rotation.y += 0.00006;
+
+  renderer.render(scene, camera);
+}
+requestAnimationFrame(animate);
+
+/* resize */
+window.addEventListener('resize', ()=>{
+  camera.aspect = window.innerWidth/window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+</script>
+</body>
+</html>
