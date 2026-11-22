@@ -77,7 +77,7 @@ ul{padding-left:18px;margin:6px 0}li{margin:3px 0}
 </div>
 
 <div class="card note">
-<b>How it works:</b> Live XAU/USD from gold-api.com (free, no key) × USD/INR from open.er-api.com ÷ 31.1035 × 10 × (1 + import duty) gives the landed-parity price that MCX gold tracks. Spot is used as the COMEX proxy (COMEX futures differ by a small basis). MCX trades at a premium/discount to this; enter the real MCX price above to see the gap. The model (EMA crossover, RSI, momentum, regression slope, dip-from-high, INR trend) learns from prices collected while this page is open and saved in your browser – signals get more reliable after ~30 minutes of data.<br><br>
+<b>How it works:</b> Live XAU/USD from gold-api.com (free, no key) × USD/INR from open.er-api.com ÷ 31.1035 × 10 × (1 + import duty) gives the landed-parity price that MCX gold tracks. Spot is used as the COMEX proxy (COMEX futures differ by a small basis). MCX trades at a premium/discount to this; enter the real MCX price above to see the gap. The model (EMA crossover, RSI, momentum, regression slope, dip-from-high, INR trend) learns from prices collected while this page is open and saved in your browser – a first signal appears after ~2 minutes and gets more reliable after ~30 minutes of data.<br><br>
 <b>⚠ Not financial advice.</b> Short-term statistics cannot predict markets; use this as one input alongside MCX quotes, news (US Fed, dollar, geopolitics, RBI, Union Budget duty changes) and your own horizon. Consider buying in instalments (SIP-style) rather than timing a single entry. Gold's jeweller rate also adds making charges and local taxes.
 </div>
 
@@ -110,10 +110,15 @@ async function getGold(){
 async function getFx(){
   try{const d=await j('https://open.er-api.com/v6/latest/USD');if(d.rates&&d.rates.INR)fx=d.rates.INR;}
   catch(e){try{const d=await j('https://api.frankfurter.app/latest?from=USD&to=INR');fx=d.rates.INR}catch(e2){}}
-  try{const e=new Date(),s=new Date(Date.now()-30*864e5);
-    const f=d=>d.toISOString().slice(0,10);
-    const d=await j(`https://api.frankfurter.app/${f(s)}..${f(e)}?from=USD&to=INR`);
-    const v=Object.values(d.rates).map(x=>x.INR);fxTrend=(v[v.length-1]/v[0]-1)*100;}catch(e){}
+  fxTrend=null;
+  const f=d=>d.toISOString().slice(0,10),old=new Date(Date.now()-30*864e5);
+  const tries=[
+   async()=>{const d=await j(`https://api.frankfurter.dev/v1/${f(old)}..?base=USD&symbols=INR`);const v=Object.values(d.rates).map(x=>x.INR);return v[v.length-1]/v[0]-1},
+   async()=>{const d=await j(`https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@${f(old)}/v1/currencies/usd.json`);return fx/d.usd.inr-1},
+   async()=>{const d=await j(`https://${f(old)}.currency-api.pages.dev/v1/currencies/usd.json`);return fx/d.usd.inr-1}
+  ];
+  for(const t of tries){try{const r=await t();if(isFinite(r)){fxTrend=r*100;break}}catch(e){}}
+  if(fxTrend===null)setTimeout(getFx,60000);
 }
 
 async function tick(){
@@ -139,7 +144,7 @@ function regress(a){const n=a.length;let sx=0,sy=0,sxy=0,sxx=0;
   return{m,b,sd:Math.sqrt(ss/n)}}
 
 function analyse(){
-  const h=S.h;if(h.length<12)return null;
+  const h=S.h;if(h.length<6)return null;
   // resample to ~1 sample per tick; estimate seconds per sample
   const a=h.map(p=>p.inr10),n=a.length;
   const dt=(h[n-1].t-h[0].t)/(n-1)/1000||20;
@@ -175,11 +180,11 @@ function render(){
   $('inr10').textContent=fmt(cur);$('inrg').textContent=fmt(cur/10);$('gst').textContent=fmt(cur*1.03);
   const c=(cur/S.open-1)*100;$('chg').textContent=(c>=0?'+':'')+c.toFixed(2)+'%';$('chg').className='val '+(c>=0?'up':'dn');
   $('usd').textContent='$'+(usd||0).toFixed(2);$('fx').textContent=fx?'₹'+fx.toFixed(3):'–';
-  if(fxTrend!==null){$('fxt').textContent=(fxTrend>=0?'+':'')+fxTrend.toFixed(2)+'%';$('fxt').className='val '+(fxTrend>0?'wn':'up')}
+  if(fxTrend===null)$('fxt').textContent='unavailable';if(fxTrend!==null){$('fxt').textContent=(fxTrend>=0?'+':'')+fxTrend.toFixed(2)+'%';$('fxt').className='val '+(fxTrend>0?'wn':'up')}
   const m=num('mcx');
   $('mcxcmp').textContent=m?`MCX ${fmt(m)} vs parity ${fmt(cur)} → ${m>=cur?'premium':'discount'} of ${fmt(Math.abs(m-cur))} (${((m/cur-1)*100).toFixed(2)}%). Tune "Local premium" to match.`:'Enter the live MCX price to compare with the computed parity.';
   const A=analyse();
-  if(!A){$('sig').textContent='Collecting data…';$('sig').className='sig';$('score').textContent=`${S.h.length}/12 samples (updates every 20s)`;$('why').innerHTML='';draw(null);return}
+  if(!A){$('sig').textContent='Collecting data…';$('sig').className='sig';$('score').textContent=`${S.h.length}/6 samples (updates every 20s)`;$('why').innerHTML='';draw(null);return}
   let sg,cl;
   if(A.score>=2){sg='🟢 BUY / ACCUMULATE';cl='up'}else if(A.score>=0.5){sg='🟡 LEAN BUY – staggered';cl='wn'}
   else if(A.score>-1){sg='🟠 WAIT';cl='wn'}else{sg='🔴 AVOID / WAIT FOR DIP';cl='dn'}
