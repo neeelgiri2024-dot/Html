@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gold Predictor India – COMEX → MCX</title>
+<style>
+:root{--bg:#faf7f0;--card:#fff;--tx:#1c1a14;--mu:#7a7566;--bd:#e7e1d0;--gold:#b8860b;--up:#0f8a4b;--dn:#c62828;--wn:#c77700}
+@media(prefers-color-scheme:dark){:root{--bg:#14120d;--card:#1e1b14;--tx:#f3eedd;--mu:#9d9680;--bd:#34301f;--gold:#e0b341;--up:#3ddc84;--dn:#ff6b6b;--wn:#ffb74d}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.45 system-ui,sans-serif;padding:14px;max-width:760px;margin:auto}
+h1{font-size:19px;margin:4px 0 2px}.sub{color:var(--mu);font-size:12px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px;margin:12px 0}
+.big{font-size:34px;font-weight:700;color:var(--gold)}
+.row{display:flex;gap:10px;flex-wrap:wrap}.row>div{flex:1;min-width:130px}
+.lbl{font-size:11px;color:var(--mu);text-transform:uppercase;letter-spacing:.04em}
+.val{font-size:17px;font-weight:600}
+.up{color:var(--up)}.dn{color:var(--dn)}.wn{color:var(--wn)}
+.sig{font-size:26px;font-weight:800}
+canvas{width:100%;height:190px;display:block}
+input{width:100%;padding:8px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);font-size:15px}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--up);margin-right:5px;animation:p 1.5s infinite}
+.dot.off{background:var(--dn);animation:none}
+@keyframes p{50%{opacity:.3}}
+ul{padding-left:18px;margin:6px 0}li{margin:3px 0}
+.note{font-size:11.5px;color:var(--mu)}
+</style>
+</head>
+<body>
+<h1>🪙 Gold Predictor – India</h1>
+<div class="sub"><span class="dot off" id="dot"></span><span id="status">Connecting…</span></div>
+
+<div class="card">
+  <div class="lbl">Estimated India price (MCX-parity, per 10g, 24K, before making)</div>
+  <div class="big" id="inr10">–</div>
+  <div class="row" style="margin-top:8px">
+    <div><div class="lbl">Per gram</div><div class="val" id="inrg">–</div></div>
+    <div><div class="lbl">Change (session)</div><div class="val" id="chg">–</div></div>
+    <div><div class="lbl">Incl. 3% GST (10g)</div><div class="val" id="gst">–</div></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="lbl">Signal</div>
+  <div class="sig" id="sig">Collecting data…</div>
+  <div id="score" class="note"></div>
+  <ul id="why"></ul>
+</div>
+
+<div class="card">
+  <div class="lbl">Projection (₹/10g, statistical estimate)</div>
+  <div class="row" style="margin-top:6px">
+    <div><div class="lbl">+15 min</div><div class="val" id="p15">–</div></div>
+    <div><div class="lbl">+1 hour</div><div class="val" id="p60">–</div></div>
+    <div><div class="lbl">Range (±1σ, 1h)</div><div class="val" id="rng">–</div></div>
+  </div>
+  <canvas id="cv"></canvas>
+  <div class="note">Line = price · dashed = fast EMA · dotted = slow EMA · right = projection</div>
+</div>
+
+<div class="card">
+  <div class="row">
+    <div><div class="lbl">COMEX / spot (USD/oz)</div><div class="val" id="usd">–</div></div>
+    <div><div class="lbl">USD/INR</div><div class="val" id="fx">–</div></div>
+    <div><div class="lbl">INR 30-day trend</div><div class="val" id="fxt">–</div></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="lbl">Settings (saved in your browser)</div>
+  <div class="row" style="margin-top:6px">
+    <div><div class="lbl">Import duty % (check current)</div><input id="duty" type="number" step="0.1" value="6"></div>
+    <div><div class="lbl">Local premium ₹/10g</div><input id="prem" type="number" value="0"></div>
+    <div><div class="lbl">Actual MCX price ₹/10g (optional)</div><input id="mcx" type="number" placeholder="type from MCX app"></div>
+  </div>
+  <div id="mcxcmp" class="note" style="margin-top:8px"></div>
+</div>
+
+<div class="card note">
+<b>How it works:</b> Live XAU/USD from gold-api.com (free, no key) × USD/INR from open.er-api.com ÷ 31.1035 × 10 × (1 + import duty) gives the landed-parity price that MCX gold tracks. Spot is used as the COMEX proxy (COMEX futures differ by a small basis). MCX trades at a premium/discount to this; enter the real MCX price above to see the gap. The model (EMA crossover, RSI, momentum, regression slope, dip-from-high, INR trend) learns from prices collected while this page is open and saved in your browser – signals get more reliable after ~30 minutes of data.<br><br>
+<b>⚠ Not financial advice.</b> Short-term statistics cannot predict markets; use this as one input alongside MCX quotes, news (US Fed, dollar, geopolitics, RBI, Union Budget duty changes) and your own horizon. Consider buying in instalments (SIP-style) rather than timing a single entry. Gold's jeweller rate also adds making charges and local taxes.
+</div>
+
+<script>
+const OZ=31.1035, KEY='goldpred_v1';
+let S={h:[],open:null};            // h: [{t,usd,inr10}]
+let fx=null, fxTrend=null, usd=null, lastOk=0;
+const $=id=>document.getElementById(id);
+const fmt=n=>'₹'+Math.round(n).toLocaleString('en-IN');
+const num=id=>parseFloat($(id).value)||0;
+
+try{const s=JSON.parse(localStorage.getItem(KEY)||'{}');
+ if(s.h)S.h=s.h.filter(p=>Date.now()-p.t<6*3600e3);
+ ['duty','prem','mcx'].forEach(k=>{if(s[k]!==undefined)$(k).value=s[k]});}catch(e){}
+['duty','prem','mcx'].forEach(k=>$(k).addEventListener('input',()=>{rebuild();save();render()}));
+function save(){try{localStorage.setItem(KEY,JSON.stringify({h:S.h.slice(-700),duty:$('duty').value,prem:$('prem').value,mcx:$('mcx').value}))}catch(e){}}
+
+const toInr10=(u,r)=>u*r/OZ*10*(1+num('duty')/100)+num('prem');
+function rebuild(){ // recompute INR series if settings change
+  S.h.forEach(p=>p.inr10=toInr10(p.usd,p.fx||fx||83)); }
+
+async function j(u){const r=await fetch(u,{cache:'no-store'});if(!r.ok)throw 0;return r.json()}
+
+async function getGold(){
+  try{const d=await j('https://api.gold-api.com/price/XAU');
+    if(d&&d.price)return +d.price}catch(e){}
+  try{const d=await j('https://api.gold-api.com/price/XAU?'+Date.now());return +d.price}catch(e){}
+  return null;
+}
+async function getFx(){
+  try{const d=await j('https://open.er-api.com/v6/latest/USD');if(d.rates&&d.rates.INR)fx=d.rates.INR;}
+  catch(e){try{const d=await j('https://api.frankfurter.app/latest?from=USD&to=INR');fx=d.rates.INR}catch(e2){}}
+  try{const e=new Date(),s=new Date(Date.now()-30*864e5);
+    const f=d=>d.toISOString().slice(0,10);
+    const d=await j(`https://api.frankfurter.app/${f(s)}..${f(e)}?from=USD&to=INR`);
+    const v=Object.values(d.rates).map(x=>x.INR);fxTrend=(v[v.length-1]/v[0]-1)*100;}catch(e){}
+}
+
+async function tick(){
+  const g=await getGold();
+  if(g&&fx){
+    usd=g;lastOk=Date.now();
+    S.h.push({t:Date.now(),usd:g,fx:fx,inr10:toInr10(g,fx)});
+    if(S.h.length>900)S.h.shift();
+    if(S.open===null)S.open=S.h[0].inr10;
+    save();
+  }
+  render();
+}
+
+// ---- indicators ----
+const ema=(a,n)=>{const k=2/(n+1);let e=a[0];const o=[e];for(let i=1;i<a.length;i++){e=a[i]*k+e*(1-k);o.push(e)}return o};
+function rsi(a,n=14){if(a.length<n+1)return null;let g=0,l=0;for(let i=a.length-n;i<a.length;i++){const d=a[i]-a[i-1];d>0?g+=d:l-=d}
+  return l===0?100:100-100/(1+g/l)}
+function regress(a){const n=a.length;let sx=0,sy=0,sxy=0,sxx=0;
+  for(let i=0;i<n;i++){sx+=i;sy+=a[i];sxy+=i*a[i];sxx+=i*i}
+  const m=(n*sxy-sx*sy)/(n*sxx-sx*sx||1),b=(sy-m*sx)/n;
+  let ss=0;for(let i=0;i<n;i++)ss+=(a[i]-(m*i+b))**2;
+  return{m,b,sd:Math.sqrt(ss/n)}}
+
+function analyse(){
+  const h=S.h;if(h.length<12)return null;
+  // resample to ~1 sample per tick; estimate seconds per sample
+  const a=h.map(p=>p.inr10),n=a.length;
+  const dt=(h[n-1].t-h[0].t)/(n-1)/1000||20;
+  const e1=ema(a,Math.min(10,n)),e2=ema(a,Math.min(30,n));
+  const r=rsi(a,Math.min(14,n-1));
+  const win=a.slice(-Math.min(n,60)),rg=regress(win);
+  const hi=Math.max(...a),lo=Math.min(...a),cur=a[n-1];
+  const mom=(cur/a[Math.max(0,n-20)]-1)*100;
+  let score=0,why=[];
+  if(e1[n-1]>e2[n-1]){score+=1;why.push('Fast EMA above slow EMA → short-term uptrend')}else{score-=1;why.push('Fast EMA below slow EMA → short-term downtrend')}
+  if(r!==null){if(r<35){score+=1;why.push(`RSI ${r.toFixed(0)} → oversold, possible bounce (good entry zone)`)}
+    else if(r>68){score-=1;why.push(`RSI ${r.toFixed(0)} → overbought, price may cool off`)}
+    else why.push(`RSI ${r.toFixed(0)} → neutral`)}
+  const dip=(hi-cur)/hi*100;
+  if(dip>0.4){score+=1;why.push(`Price is ${dip.toFixed(2)}% below recent high → dip entry`)}
+  else if(hi-lo>0&&(cur-lo)/(hi-lo)>0.9){score-=1;why.push('Trading near the top of the recent range → chasing risk')}
+  if(rg.m*(3600/dt)>cur*0.0006){score+=0.5;why.push('Regression slope rising')}
+  else if(rg.m*(3600/dt)<-cur*0.0006){score-=0.5;why.push('Regression slope falling')}
+  if(fxTrend!==null){if(fxTrend>0.6){score-=0.5;why.push(`Rupee weakened ${fxTrend.toFixed(2)}% in 30d → raises INR gold cost`)}
+    else if(fxTrend<-0.6){score+=0.5;why.push(`Rupee strengthened ${Math.abs(fxTrend).toFixed(2)}% in 30d → eases INR gold cost`)}}
+  const steps=h=>h*3600/dt;
+  const proj=s=>rg.b+rg.m*(win.length-1+s);
+  return{score,why,rsi:r,e1,e2,rg,dt,cur,
+    p15:proj(steps(.25)),p60:proj(steps(1)),sd:rg.sd*Math.sqrt(Math.max(1,steps(1)/win.length+1)),win:win.length}
+}
+
+function render(){
+  const live=Date.now()-lastOk<90e3;
+  $('dot').className='dot'+(live?'':' off');
+  $('status').textContent=lastOk?(live?'Live · updated '+new Date(lastOk).toLocaleTimeString('en-IN'):'Connection lost – retrying'):'Connecting…';
+  if(!S.h.length)return;
+  const cur=S.h[S.h.length-1].inr10;
+  $('inr10').textContent=fmt(cur);$('inrg').textContent=fmt(cur/10);$('gst').textContent=fmt(cur*1.03);
+  const c=(cur/S.open-1)*100;$('chg').textContent=(c>=0?'+':'')+c.toFixed(2)+'%';$('chg').className='val '+(c>=0?'up':'dn');
+  $('usd').textContent='$'+(usd||0).toFixed(2);$('fx').textContent=fx?'₹'+fx.toFixed(3):'–';
+  if(fxTrend!==null){$('fxt').textContent=(fxTrend>=0?'+':'')+fxTrend.toFixed(2)+'%';$('fxt').className='val '+(fxTrend>0?'wn':'up')}
+  const m=num('mcx');
+  $('mcxcmp').textContent=m?`MCX ${fmt(m)} vs parity ${fmt(cur)} → ${m>=cur?'premium':'discount'} of ${fmt(Math.abs(m-cur))} (${((m/cur-1)*100).toFixed(2)}%). Tune "Local premium" to match.`:'Enter the live MCX price to compare with the computed parity.';
+  const A=analyse();
+  if(!A){$('sig').textContent='Collecting data…';$('sig').className='sig';$('score').textContent=`${S.h.length}/12 samples (updates every 20s)`;$('why').innerHTML='';draw(null);return}
+  let sg,cl;
+  if(A.score>=2){sg='🟢 BUY / ACCUMULATE';cl='up'}else if(A.score>=0.5){sg='🟡 LEAN BUY – staggered';cl='wn'}
+  else if(A.score>-1){sg='🟠 WAIT';cl='wn'}else{sg='🔴 AVOID / WAIT FOR DIP';cl='dn'}
+  $('sig').textContent=sg;$('sig').className='sig '+cl;
+  $('score').textContent=`Score ${A.score.toFixed(1)} (range −3.5 … +3.5) · ${A.win} samples`;
+  $('why').innerHTML=A.why.map(x=>'<li>'+x+'</li>').join('');
+  $('p15').textContent=fmt(A.p15);$('p60').textContent=fmt(A.p60);
+  $('rng').textContent=fmt(A.p60-A.sd)+' – '+fmt(A.p60+A.sd);
+  draw(A);
+}
+
+function draw(A){
+  const cv=$('cv'),dpr=devicePixelRatio||1,W=cv.clientWidth,H=cv.clientHeight;
+  cv.width=W*dpr;cv.height=H*dpr;const x=cv.getContext('2d');x.scale(dpr,dpr);x.clearRect(0,0,W,H);
+  const a=S.h.map(p=>p.inr10).slice(-150);if(a.length<2)return;
+  const ex=A?20:0,all=A?a.concat([A.p15,A.p60]):a;
+  const mn=Math.min(...all),mx=Math.max(...all),pad=(mx-mn)*.1||1,lo=mn-pad,hi=mx+pad;
+  const total=a.length+ex,X=i=>i/(total-1)*(W-48),Y=v=>H-14-(v-lo)/(hi-lo)*(H-28);
+  const st=getComputedStyle(document.body),gold=st.getPropertyValue('--gold'),mu=st.getPropertyValue('--mu');
+  x.font='10px system-ui';x.fillStyle=mu;
+  [lo+pad,(lo+hi)/2,hi-pad].forEach(v=>{x.fillText(Math.round(v).toLocaleString('en-IN'),W-46,Y(v)+3);x.strokeStyle=mu+'33';x.beginPath();x.moveTo(0,Y(v));x.lineTo(W-48,Y(v));x.stroke()});
+  const line=(arr,col,dash,w)=>{x.beginPath();x.setLineDash(dash);x.strokeStyle=col;x.lineWidth=w;arr.forEach((v,i)=>i?x.lineTo(X(i),Y(v)):x.moveTo(X(i),Y(v)));x.stroke();x.setLineDash([])};
+  line(a,gold,[],2);
+  if(A){line(A.e1.slice(-a.length),'#3b82f6',[5,3],1);line(A.e2.slice(-a.length),'#a855f7',[2,3],1);
+    x.beginPath();x.setLineDash([4,4]);x.strokeStyle=gold;x.moveTo(X(a.length-1),Y(a[a.length-1]));
+    x.lineTo(X(a.length-1+ex/2),Y(A.p15));x.lineTo(X(a.length-1+ex),Y(A.p60));x.stroke();x.setLineDash([])}
+}
+
+(async()=>{await getFx();await tick();setInterval(tick,20000);setInterval(getFx,600000);
+  addEventListener('resize',render)})();
+</script>
+</body>
+</html>
