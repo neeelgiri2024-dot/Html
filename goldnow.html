@@ -67,24 +67,31 @@ ul{padding-left:18px;margin:6px 0}li{margin:3px 0}
 </div>
 
 <div class="card">
+  <div class="lbl">Live data sources (free, no key)</div>
+  <div id="src" style="margin-top:6px">Loading…</div>
+  <div id="warn" class="note wn"></div>
+  <div class="note"><a href="https://crystalballmarkets.com/markets" style="color:var(--gold)">Rates by Crystal Ball Markets</a> · indicative, not dealing prices</div>
+</div>
+
+<div class="card">
   <div class="lbl">Settings (saved in your browser)</div>
   <div class="row" style="margin-top:6px">
     <div><div class="lbl">Import duty % (check current)</div><input id="duty" type="number" step="0.1" value="6"></div>
     <div><div class="lbl">Local premium ₹/10g</div><input id="prem" type="number" value="0"></div>
-    <div><div class="lbl">Actual MCX price ₹/10g (optional)</div><input id="mcx" type="number" placeholder="type from MCX app"></div>
+    <div><div class="lbl">Your own MCX price ₹/10g (optional)</div><input id="mcx" type="number" placeholder="type from MCX app"></div>
   </div>
   <div id="mcxcmp" class="note" style="margin-top:8px"></div>
 </div>
 
 <div class="card note">
-<b>How it works:</b> Live XAU/USD from gold-api.com (free, no key) × USD/INR from open.er-api.com ÷ 31.1035 × 10 × (1 + import duty) gives the landed-parity price that MCX gold tracks. Spot is used as the COMEX proxy (COMEX futures differ by a small basis). MCX trades at a premium/discount to this; enter the real MCX price above to see the gap. The model (EMA crossover, RSI, momentum, regression slope, dip-from-high, INR trend) learns from prices collected while this page is open and saved in your browser – a first signal appears after ~2 minutes and gets more reliable after ~30 minutes of data.<br><br>
+<b>About MCX data:</b> no free, open, browser-usable API publishes live MCX futures quotes (MCX data is licensed; feeds are paid or need a broker login). So MCX is computed from live global gold × USD/INR × duty, which is how MCX gold is priced, and cross-checked against two independent live sources shown in the sources card.<br><br><b>How it works:</b> Live XAU/USD from gold-api.com (free, no key) × USD/INR from open.er-api.com ÷ 31.1035 × 10 × (1 + import duty) gives the landed-parity price that MCX gold tracks. Spot is used as the COMEX proxy (COMEX futures differ by a small basis). MCX trades at a premium/discount to this; enter the real MCX price above to see the gap. The model (EMA crossover, RSI, momentum, regression slope, dip-from-high, INR trend) learns from prices collected while this page is open and saved in your browser – a first signal appears after ~2 minutes and gets more reliable after ~30 minutes of data.<br><br>
 <b>⚠ Not financial advice.</b> Short-term statistics cannot predict markets; use this as one input alongside MCX quotes, news (US Fed, dollar, geopolitics, RBI, Union Budget duty changes) and your own horizon. Consider buying in instalments (SIP-style) rather than timing a single entry. Gold's jeweller rate also adds making charges and local taxes.
 </div>
 
 <script>
 const OZ=31.1035, KEY='goldpred_v1';
 let S={h:[],open:null};            // h: [{t,usd,inr10}]
-let fx=null, fxTrend=null, usd=null, lastOk=0;
+let fx=null, fxTrend=null, usd=null, lastOk=0, cb=null, oro=null, n=0;
 const $=id=>document.getElementById(id);
 const fmt=n=>'₹'+Math.round(n).toLocaleString('en-IN');
 const num=id=>parseFloat($(id).value)||0;
@@ -121,8 +128,15 @@ async function getFx(){
   if(fxTrend===null)setTimeout(getFx,60000);
 }
 
+async function getCB(){try{const d=await j('https://crystalballmarkets.com/markets/api/v1/gold.json');
+  const c=d.data.countries.find(x=>x.country==='IN');cb=c&&c.price?{p10:+c.price,t:d.updated}:null}catch(e){cb=null}}
+async function getOro(){try{const d=await j('https://api.oropocket.com/public/prices');const g=d.data.gold;
+  oro={buy:+g.buy,sell:+g.sell,ch:g.change24h&&g.change24h.buy,t:d.data.timestamp}}catch(e){oro=null}}
+
 async function tick(){
-  const g=await getGold();
+  if(n++%3===0)await Promise.all([getCB(),getOro()]);
+  let g=await getGold();
+  if(!g&&cb&&fx)g=cb.p10*OZ/10/fx; // fallback: derive USD/oz from independent source
   if(g&&fx){
     usd=g;lastOk=Date.now();
     S.h.push({t:Date.now(),usd:g,fx:fx,inr10:toInr10(g,fx)});
@@ -175,6 +189,7 @@ function render(){
   const live=Date.now()-lastOk<90e3;
   $('dot').className='dot'+(live?'':' off');
   $('status').textContent=lastOk?(live?'Live · updated '+new Date(lastOk).toLocaleTimeString('en-IN'):'Connection lost – retrying'):'Connecting…';
+  renderSrc();
   if(!S.h.length)return;
   const cur=S.h[S.h.length-1].inr10;
   $('inr10').textContent=fmt(cur);$('inrg').textContent=fmt(cur/10);$('gst').textContent=fmt(cur*1.03);
@@ -182,7 +197,7 @@ function render(){
   $('usd').textContent='$'+(usd||0).toFixed(2);$('fx').textContent=fx?'₹'+fx.toFixed(3):'–';
   if(fxTrend===null)$('fxt').textContent='unavailable';if(fxTrend!==null){$('fxt').textContent=(fxTrend>=0?'+':'')+fxTrend.toFixed(2)+'%';$('fxt').className='val '+(fxTrend>0?'wn':'up')}
   const m=num('mcx');
-  $('mcxcmp').textContent=m?`MCX ${fmt(m)} vs parity ${fmt(cur)} → ${m>=cur?'premium':'discount'} of ${fmt(Math.abs(m-cur))} (${((m/cur-1)*100).toFixed(2)}%). Tune "Local premium" to match.`:'Enter the live MCX price to compare with the computed parity.';
+  $('mcxcmp').textContent=m?`MCX ${fmt(m)} vs parity ${fmt(cur)} → ${m>=cur?'premium':'discount'} of ${fmt(Math.abs(m-cur))} (${((m/cur-1)*100).toFixed(2)}%). Tune "Local premium" to match.`:'No free open API publishes MCX futures, so the MCX-parity price above is computed from live COMEX/spot × USD/INR × duty.';
   const A=analyse();
   if(!A){$('sig').textContent='Collecting data…';$('sig').className='sig';$('score').textContent=`${S.h.length}/6 samples (updates every 20s)`;$('why').innerHTML='';draw(null);return}
   let sg,cl;
@@ -194,6 +209,20 @@ function render(){
   $('p15').textContent=fmt(A.p15);$('p60').textContent=fmt(A.p60);
   $('rng').textContent=fmt(A.p60-A.sd)+' – '+fmt(A.p60+A.sd);
   draw(A);
+}
+
+function renderSrc(){
+  const pre=usd&&fx?usd*fx/OZ*10:null,cur=S.h.length?S.h[S.h.length-1].inr10:null;
+  const r=(ok,t)=>`<div style="margin:5px 0">${ok?'✅':'❌'} ${t}</div>`;
+  let h=r(!!usd,`<b>XAU/USD</b> (gold-api.com): ${usd?'$'+usd.toFixed(2):'unavailable'}`);
+  h+=r(!!fx,`<b>USD/INR</b> (open.er-api.com): ${fx?'₹'+fx.toFixed(3):'unavailable'}`);
+  h+=r(!!cb,`<b>India 24K parity /10g</b> (Crystal Ball Markets, pre-duty): ${cb?fmt(cb.p10)+(pre?` · differs ${((cb.p10/pre-1)*100).toFixed(2)}% from mine`:''):'unavailable'}`);
+  h+=r(!!oro,`<b>Indian dealer quote /10g</b> (OroPocket, ex-GST, not MCX): ${oro?'buy '+fmt(oro.buy*10)+' · sell '+fmt(oro.sell*10)+(cur?` · buy is ${((oro.buy*10/cur-1)*100).toFixed(2)}% vs MCX-parity`:''):'unavailable'}`);
+  $('src').innerHTML=h;
+  let w='';
+  if(cb&&pre&&Math.abs(cb.p10/pre-1)>0.015)w='⚠ Sources disagree by more than 1.5% – one feed may be stale. Verify on MCX/your broker before buying.';
+  else if(!usd||!fx)w='⚠ Core price feed is down – showing last known values only.';
+  $('warn').textContent=w;
 }
 
 function draw(A){
